@@ -11,6 +11,7 @@ func (app *application) routes() http.Handler {
 	//mux роутер
 	mux := chi.NewRouter()
 	mux.Use(middleware.Recoverer)
+	mux.Use(app.enableCORS)
 	mux.Get("/", app.Home)
 	mux.Get("/books", app.AllBooks)
 	return mux
