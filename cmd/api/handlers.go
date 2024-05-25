@@ -3,9 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
-
-	"github.com/hentan/final_project/internal/models"
 )
 
 func (app *application) Home(w http.ResponseWriter, r *http.Request) {
@@ -30,27 +29,12 @@ func (app *application) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) AllBooks(w http.ResponseWriter, r *http.Request) {
-	var books []models.Book
 
-	warAndPiece := models.Book{
-		ID:       1,
-		Title:    "War and Piece",
-		AuthorId: 1,
-		Year:     1869,
-		ISBN:     "978-5-389-06256-6",
+	books, err := app.DB.AllBooks()
+	if err != nil {
+		log.Println(err)
+		return
 	}
-
-	books = append(books, warAndPiece)
-
-	theIdiot := models.Book{
-		ID:       2,
-		Title:    "the Idiot",
-		AuthorId: 2,
-		Year:     1868,
-		ISBN:     "916-5-219-03218-4",
-	}
-
-	books = append(books, theIdiot)
 
 	out, err := json.Marshal(books)
 	if err != nil {
