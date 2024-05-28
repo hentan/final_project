@@ -14,9 +14,19 @@ create table books(
 	ISBN varchar(50)
 );
 
-alter table public.books
+CREATE TABLE users (
+    id serial primary key,
+    first_name varchar(255),
+    last_name varchar(255),
+    email varchar(255),
+    password varchar(255),
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
+);
+
+alter table books
 add constraint fk_books_authors foreign key(Author_ID)
-references public.authors(ID);
+references authors(ID);
 
 insert into authors(Name_author, Sirname_author, Biography, Birthday)
 values(
@@ -36,3 +46,6 @@ insert into books(Name_book, Author_ID, Year_book, ISBN)
 values
 ('War and Peace', 1, 1869, '978-5-389-06256-6'),
 ('the Idiot', 2, 1868, '978-1533695840');
+
+insert into users(id, first_name, last_name, email, password, created_at, updated_at)
+values(1, 'Admin', 'User', 'admin@example.com', '$2a$14$wVsaPvJnJJsomWArouWCtusem6S/.Gauq/GjOIEHpyh2DAMmso1wy', '2022-09-23 00:00:00', '2022-09-23 00:00:00')

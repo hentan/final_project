@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
+	"strconv"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func (app *application) Home(w http.ResponseWriter, r *http.Request) {
@@ -18,31 +18,63 @@ func (app *application) Home(w http.ResponseWriter, r *http.Request) {
 		Version: "1.0.0",
 	}
 
-	out, err := json.Marshal(payload)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(out)
+	_ = app.writeJSON(w, http.StatusOK, payload)
 }
 
 func (app *application) AllBooks(w http.ResponseWriter, r *http.Request) {
 
 	books, err := app.DB.AllBooks()
 	if err != nil {
-		log.Println(err)
+		app.errorJSON(w, err)
 		return
 	}
 
-	out, err := json.Marshal(books)
+	_ = app.writeJSON(w, http.StatusOK, books)
+
+}
+
+func (app *application) GetBook(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	bookID, err := strconv.Atoi(id)
 	if err != nil {
-		fmt.Println(err)
+		app.errorJSON(w, err)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(out)
+	book, err := app.DB.OneBook(bookID)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
 
+	_ = app.writeJSON(w, http.StatusOK, book)
+}
+
+func (app *application) BookForEdit(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (app *application) AllAuthors(w http.ResponseWriter, r *http.Request) {
+
+	books, err := app.DB.AllAuthors()
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	_ = app.writeJSON(w, http.StatusOK, books)
+
+}
+
+func (app *application) GetAuthor(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	authorID, err := strconv.Atoi(id)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+
+	author, err := app.DB.OneAuthor(authorID)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+
+	_ = app.writeJSON(w, http.StatusOK, author)
 }

@@ -14,5 +14,8 @@ func (app *application) routes() http.Handler {
 	mux.Use(app.enableCORS)
 	mux.Get("/", app.Home)
 	mux.Get("/books", app.AllBooks)
+	mux.Get("/books/{id}", app.GetBook)
+	mux.Get("/authors", app.AllAuthors)
+	mux.Get("/authors/{id}", app.GetAuthor)
 	return mux
 }
