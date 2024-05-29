@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -47,6 +48,36 @@ func (app *application) GetBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = app.writeJSON(w, http.StatusOK, book)
+}
+
+func (app *application) InsertBook(w http.ResponseWriter, r *http.Request) {
+	var bookWithID models.BookID
+
+	err := app.readJSON(w, r, &bookWithID)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	var book models.Book
+	book.ID = bookWithID.ID
+	book.Title = bookWithID.Title
+	book.Author = strconv.Itoa(bookWithID.AuthorID)
+	book.Year = bookWithID.Year
+	book.ISBN = bookWithID.ISBN
+
+	newID, err := app.DB.InsertBook(book)
+	if err != nil {
+		return
+	}
+
+	resp := JSONResponce{
+		Error:   false,
+		Message: fmt.Sprintf("Книга с id %d успешно добавлена", newID),
+	}
+
+	app.writeJSON(w, http.StatusAccepted, resp)
+
 }
 
 func (app *application) UpdateBook(w http.ResponseWriter, r *http.Request) {
