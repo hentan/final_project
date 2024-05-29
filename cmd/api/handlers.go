@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/hentan/final_project/internal/models"
 )
 
 func (app *application) Home(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +49,38 @@ func (app *application) GetBook(w http.ResponseWriter, r *http.Request) {
 	_ = app.writeJSON(w, http.StatusOK, book)
 }
 
-func (app *application) BookForEdit(w http.ResponseWriter, r *http.Request) {
+func (app *application) UpdateBook(w http.ResponseWriter, r *http.Request) {
+	var payload models.BookID
+
+	err := app.readJSON(w, r, &payload)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	book, err := app.DB.OneBook(payload.ID)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	book.Title = payload.Title
+	book.Author = strconv.Itoa(payload.AuthorID)
+	book.Year = payload.Year
+	book.ISBN = payload.ISBN
+
+	err = app.DB.UpdateBook(*book)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	resp := JSONResponce{
+		Error:   false,
+		Message: "Книга успешно обновлена",
+	}
+
+	app.writeJSON(w, http.StatusAccepted, resp)
 
 }
 

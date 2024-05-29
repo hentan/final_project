@@ -12,4 +12,6 @@ type DatabaseRepo interface {
 	OneBook(id int) (*models.Book, error)
 	AllAuthors() ([]*models.Author, error)
 	OneAuthor(id int) (*models.Author, error)
+	InsertBook(book models.Book) (int, error)
+	UpdateBook(book models.Book) error
 }

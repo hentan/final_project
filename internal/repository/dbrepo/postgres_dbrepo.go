@@ -141,3 +141,52 @@ func (m *PostgresDBRepo) OneAuthor(id int) (*models.Author, error) {
 	}
 	return &author, err
 }
+
+func (m *PostgresDBRepo) InsertBook(book models.Book) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `
+        insert into books(name_book, author_id, year_book,isbn)
+		values($1, $2, $3, $4) returning id
+    `
+
+	var newID int
+
+	err := m.DB.QueryRowContext(ctx, query,
+		book.Title,
+		book.Author,
+		book.Year,
+		book.ISBN,
+	).Scan(&newID)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return newID, nil
+}
+
+func (m *PostgresDBRepo) UpdateBook(book models.Book) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `
+        update books set name_book = $1, author_id = $2, year_book = $3, isbn =$4
+		where id = $5
+    `
+
+	_, err := m.DB.ExecContext(ctx, query,
+		book.Title,
+		book.Author,
+		book.Year,
+		book.ISBN,
+		book.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
