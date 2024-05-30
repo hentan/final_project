@@ -15,9 +15,13 @@ func (app *application) routes() http.Handler {
 	mux.Get("/", app.Home)
 	mux.Get("/books", app.AllBooks)
 	mux.Get("/books/{id}", app.GetBook)
-	mux.Get("/authors", app.AllAuthors)
-	mux.Get("/authors/{id}", app.GetAuthor)
 	mux.Put("/books/{id}", app.UpdateBook)
 	mux.Post("/books", app.InsertBook)
+	mux.Delete("/books/{id}", app.DeleteBook)
+	mux.Get("/authors", app.AllAuthors)
+	mux.Get("/authors/{id}", app.GetAuthor)
+	mux.Put("/authors/{id}", app.UpdateAuthor)
+	mux.Post("/authors", app.InsertAuthor)
+	mux.Delete("/authors/{id}", app.DeleteAuthor)
 	return mux
 }

@@ -115,6 +115,30 @@ func (app *application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (app *application) DeleteBook(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	ID, err := strconv.Atoi(id)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+
+	err = app.DB.DeleteBook(ID)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	resp := JSONResponce{
+		Error:   false,
+		Message: fmt.Sprintf("Книга с id %d успешно удалена", ID),
+	}
+
+	app.writeJSON(w, http.StatusAccepted, resp)
+
+}
+
+// с этой строки и ниже действия с авторами
+
 func (app *application) AllAuthors(w http.ResponseWriter, r *http.Request) {
 
 	books, err := app.DB.AllAuthors()
@@ -140,4 +164,80 @@ func (app *application) GetAuthor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = app.writeJSON(w, http.StatusOK, author)
+}
+
+func (app *application) InsertAuthor(w http.ResponseWriter, r *http.Request) {
+	var author models.Author
+
+	err := app.readJSON(w, r, &author)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	newID, err := app.DB.InsertAuthor(author)
+	if err != nil {
+		return
+	}
+
+	resp := JSONResponce{
+		Error:   false,
+		Message: fmt.Sprintf("Автор с id %d успешно добавлен", newID),
+	}
+
+	app.writeJSON(w, http.StatusAccepted, resp)
+
+}
+
+// некорректно отрабатывает, поправить book на 201 строке
+func (app *application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
+	var author models.Author
+
+	err := app.readJSON(w, r, &author)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	book, err := app.DB.OneAuthor(author.ID)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	err = app.DB.UpdateAuthor(*book)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	resp := JSONResponce{
+		Error:   false,
+		Message: "Автор успешно обновлен",
+	}
+
+	app.writeJSON(w, http.StatusAccepted, resp)
+
+}
+
+func (app *application) DeleteAuthor(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	ID, err := strconv.Atoi(id)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+
+	err = app.DB.DeleteAuthor(ID)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	resp := JSONResponce{
+		Error:   false,
+		Message: fmt.Sprintf("Автор с id %d успешно удален", ID),
+	}
+
+	app.writeJSON(w, http.StatusAccepted, resp)
+
 }

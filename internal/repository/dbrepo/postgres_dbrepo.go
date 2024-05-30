@@ -81,6 +81,73 @@ func (m *PostgresDBRepo) OneBook(id int) (*models.Book, error) {
 	return &book, err
 }
 
+func (m *PostgresDBRepo) InsertBook(book models.Book) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `
+        insert into books(name_book, author_id, year_book,isbn)
+		values($1, $2, $3, $4) returning id
+    `
+
+	var newID int
+
+	err := m.DB.QueryRowContext(ctx, query,
+		book.Title,
+		book.Author,
+		book.Year,
+		book.ISBN,
+	).Scan(&newID)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return newID, nil
+}
+
+func (m *PostgresDBRepo) UpdateBook(book models.Book) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `
+        update books set name_book = $1, author_id = $2, year_book = $3, isbn =$4
+		where id = $5
+    `
+
+	_, err := m.DB.ExecContext(ctx, query,
+		book.Title,
+		book.Author,
+		book.Year,
+		book.ISBN,
+		book.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *PostgresDBRepo) DeleteBook(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `
+        delete from books where id = $1
+    `
+
+	_, err := m.DB.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//здесь и далее действия с авторами
+
 func (m *PostgresDBRepo) AllAuthors() ([]*models.Author, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
@@ -142,22 +209,27 @@ func (m *PostgresDBRepo) OneAuthor(id int) (*models.Author, error) {
 	return &author, err
 }
 
-func (m *PostgresDBRepo) InsertBook(book models.Book) (int, error) {
+func (m *PostgresDBRepo) InsertAuthor(author models.Author) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
 	query := `
-        insert into books(name_book, author_id, year_book,isbn)
+        insert into authors(name_author, sirname_author, biography, birthday)
 		values($1, $2, $3, $4) returning id
     `
 
+	t, err := time.Parse("2006-01-02", author.Birthday)
+	if err != nil {
+		return 0, err
+	}
+
 	var newID int
 
-	err := m.DB.QueryRowContext(ctx, query,
-		book.Title,
-		book.Author,
-		book.Year,
-		book.ISBN,
+	err = m.DB.QueryRowContext(ctx, query,
+		author.NameAuthor,
+		author.SirnameAuthor,
+		author.Biography,
+		t,
 	).Scan(&newID)
 
 	if err != nil {
@@ -167,23 +239,44 @@ func (m *PostgresDBRepo) InsertBook(book models.Book) (int, error) {
 	return newID, nil
 }
 
-func (m *PostgresDBRepo) UpdateBook(book models.Book) error {
+func (m *PostgresDBRepo) UpdateAuthor(author models.Author) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
 	query := `
-        update books set name_book = $1, author_id = $2, year_book = $3, isbn =$4
+        update authors set name_author = $1, sirname_author = $2, biography = $3, birthday = $4
 		where id = $5
     `
 
-	_, err := m.DB.ExecContext(ctx, query,
-		book.Title,
-		book.Author,
-		book.Year,
-		book.ISBN,
-		book.ID,
+	t, err := time.Parse("2006-01-02", author.Birthday)
+	if err != nil {
+		return err
+	}
+
+	_, err = m.DB.ExecContext(ctx, query,
+		author.NameAuthor,
+		author.SirnameAuthor,
+		author.Biography,
+		author.Birthday,
+		t,
 	)
 
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *PostgresDBRepo) DeleteAuthor(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `
+        delete from authors where id = $1
+    `
+
+	_, err := m.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
