@@ -22,7 +22,7 @@ func main() {
 	//конфиг
 	var app application
 	//флаги
-	flag.StringVar(&app.DSN, "dsn", "host=localhost port=5432 user=postgres password=postgres dbname=final_project sslmode=disable timezone=UTC connect_timeout=5", "Postgres connection string")
+	flag.StringVar(&app.DSN, "dsn", "host=localhost port=5433 user=postgres password=postgres dbname=final_project sslmode=disable timezone=UTC connect_timeout=5", "Postgres connection string")
 	flag.Parse()
 
 	//база данных

@@ -191,21 +191,26 @@ func (app *application) InsertAuthor(w http.ResponseWriter, r *http.Request) {
 
 // некорректно отрабатывает, поправить book на 201 строке
 func (app *application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
-	var author models.Author
+	var payload models.Author
 
-	err := app.readJSON(w, r, &author)
+	err := app.readJSON(w, r, &payload)
 	if err != nil {
 		app.errorJSON(w, err)
 		return
 	}
 
-	book, err := app.DB.OneAuthor(author.ID)
+	author, err := app.DB.OneAuthor(payload.ID)
 	if err != nil {
 		app.errorJSON(w, err)
 		return
 	}
 
-	err = app.DB.UpdateAuthor(*book)
+	author.NameAuthor = payload.NameAuthor
+	author.SirnameAuthor = payload.SirnameAuthor
+	author.Biography = payload.Biography
+	author.Birthday = payload.Birthday
+
+	err = app.DB.UpdateAuthor(*author)
 	if err != nil {
 		app.errorJSON(w, err)
 		return

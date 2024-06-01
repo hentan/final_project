@@ -3,6 +3,7 @@ package dbrepo
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/hentan/final_project/internal/models"
@@ -248,17 +249,14 @@ func (m *PostgresDBRepo) UpdateAuthor(author models.Author) error {
 		where id = $5
     `
 
-	t, err := time.Parse("2006-01-02", author.Birthday)
-	if err != nil {
-		return err
-	}
+	fmt.Println(author.ID, author.Birthday)
 
-	_, err = m.DB.ExecContext(ctx, query,
+	_, err := m.DB.ExecContext(ctx, query,
 		author.NameAuthor,
 		author.SirnameAuthor,
 		author.Biography,
 		author.Birthday,
-		t,
+		author.ID,
 	)
 
 	if err != nil {
