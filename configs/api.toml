@@ -1,0 +1,4 @@
+[web-server]
+bind_addr = ":8080"
+[storage]
+database_uri = "host=localhost port=5433 user=postgres password=postgres dbname=restapi sslmode=disable"
