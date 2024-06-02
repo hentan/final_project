@@ -281,3 +281,52 @@ func (m *PostgresDBRepo) DeleteAuthor(id int) error {
 
 	return nil
 }
+
+func (m *PostgresDBRepo) UpdateAuthorAndBook(author models.Author, book models.Book) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	tx, err := m.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	query := `
+        update authors set name_author = $1, sirname_author = $2, biography = $3, birthday = $4
+		where id = $5
+    `
+
+	_, err = m.DB.ExecContext(ctx, query,
+		author.NameAuthor,
+		author.SirnameAuthor,
+		author.Biography,
+		author.Birthday,
+		author.ID,
+	)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	query = `
+        update books set name_book = $1, author_id = $2, year_book = $3, isbn =$4
+		where id = $5
+    `
+
+	_, err = m.DB.ExecContext(ctx, query,
+		book.Title,
+		book.Author,
+		book.Year,
+		book.ISBN,
+		book.ID,
+	)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}

@@ -23,5 +23,6 @@ func (app *application) routes() http.Handler {
 	mux.Put("/authors/{id}", app.UpdateAuthor)
 	mux.Post("/authors", app.InsertAuthor)
 	mux.Delete("/authors/{id}", app.DeleteAuthor)
+	mux.Put("/books/{id_book}/authors/{id_author}", app.UpdateAuthorAndBook)
 	return mux
 }

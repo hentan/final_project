@@ -18,4 +18,5 @@ type DatabaseRepo interface {
 	InsertAuthor(author models.Author) (int, error)
 	UpdateAuthor(author models.Author) error
 	DeleteAuthor(id int) error
+	UpdateAuthorAndBook(author models.Author, book models.Book) error
 }

@@ -189,7 +189,6 @@ func (app *application) InsertAuthor(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// некорректно отрабатывает, поправить book на 201 строке
 func (app *application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 	var payload models.Author
 
@@ -245,4 +244,60 @@ func (app *application) DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 
 	app.writeJSON(w, http.StatusAccepted, resp)
 
+}
+
+func (app *application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Request) {
+	id_book := chi.URLParam(r, "id_book")
+	ID_book, err := strconv.Atoi(id_book)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+
+	id_author := chi.URLParam(r, "id_author")
+	ID_author, err := strconv.Atoi(id_author)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+
+	var payload models.AuthorAndBook
+
+	err = app.readJSON(w, r, &payload)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	author, err := app.DB.OneAuthor(ID_author)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	book, err := app.DB.OneBook(ID_book)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	author.NameAuthor = payload.NameAuthor
+	author.SirnameAuthor = payload.SirnameAuthor
+	author.Biography = payload.Biography
+	author.Birthday = payload.Birthday
+	book.Title = payload.Title
+	book.Author = strconv.Itoa(payload.AuthorID)
+	book.Year = payload.Year
+	book.ISBN = payload.ISBN
+
+	err = app.DB.UpdateAuthorAndBook(*author, *book)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	resp := JSONResponce{
+		Error:   false,
+		Message: "Автор и книга успешно обновлены",
+	}
+
+	app.writeJSON(w, http.StatusAccepted, resp)
 }
