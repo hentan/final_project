@@ -22,7 +22,7 @@ func main() {
 	//конфиг
 	var app application
 	//флаги
-	flag.StringVar(&app.DSN, "dsn", "host=localhost port=5433 user=postgres password=postgres dbname=final_project sslmode=disable timezone=UTC connect_timeout=5", "Postgres connection string")
+	flag.StringVar(&app.DSN, "dsn", "postgres://postgres:postgres@db:5432/final_project?sslmode=disable", "Postgres connection string")
 	flag.Parse()
 
 	//база данных
@@ -41,6 +41,6 @@ func main() {
 	//старт сервера
 	err = http.ListenAndServe(fmt.Sprintf(":%d", port), app.routes())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("привет", err)
 	}
 }

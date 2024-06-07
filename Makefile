@@ -1,15 +1,28 @@
-.PHONY: build
+# Переменные
+COMPOSE_FILE=docker-compose.yml
+ENV_FILE=.env
 
-d.up: 
-	docker-compose up -d
+# Цели
+.PHONY: all build up down logs
 
-d.down: 
-	docker-compose down
+all: build up
 
 build:
-	go build -v ./cmd/api/
+	@echo "Building Docker images..."
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) build
 
-run: d.up
-		go run ./cmd/api/
+up:
+	@echo "Starting Docker containers..."
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) up -d
 
-.DEFAULT_GOAL:= build
+down:
+	@echo "Stopping Docker containers..."
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) down
+
+logs:
+	@echo "Showing logs..."
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) logs -f
+
+ps:
+	@echo "Showing container status..."
+	docker-compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) ps
