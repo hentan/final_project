@@ -1,18 +1,15 @@
-# Указываем базовый образ
-FROM golang:1.20 as builder
+FROM golang:1.20-alpine
 
 WORKDIR /app
 
 COPY go.mod .
 
+RUN go mod download
+
 COPY . .
 
-RUN go build -o main ./cmd/api/
-
-WORKDIR /dist
-
-RUN cp /app/main .
+RUN go build -o main ./cmd/api
 
 EXPOSE 8080
 
-CMD ["/dist/main"]
+CMD ["./main"]

@@ -1,16 +1,44 @@
 version: "3.8"
 
 services:
-  db:
-    image: postgres:16
-    ports:
-      - "5433:5432"
+  postgres:
+    image: "postgres:16"
+    networks:
+      new:
+        aliases:
+          - postgres
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: final_project
+      POSTGRES_DB: test_migrations
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    ports:
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+
+  migrate:
+    image: migrate/migrate
+    networks:
+      - new
+    volumes:
+      - ./db/migration:/migrations
+    command:
+      [
+        "-path",
+        "/migrations",
+        "-database",
+        "postgres://postgres:postgres@postgres:5432/final_project?sslmode=disable",
+        "up",
+        "3",
+      ]
+    depends_on:
+      - postgres
 
   app:
     build:
@@ -19,9 +47,14 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      - postgres
+    networks:
+      - new
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres?sslmode=disable
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
+
+networks:
+  new:
 
 volumes:
   postgres_data:

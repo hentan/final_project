@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/hentan/final_project/internal/repository"
 	"github.com/hentan/final_project/internal/repository/dbrepo"
+	"github.com/joho/godotenv"
 )
 
 const port = 8080
@@ -22,7 +24,23 @@ func main() {
 	//конфиг
 	var app application
 	//флаги
-	flag.StringVar(&app.DSN, "dsn", "postgres://postgres:postgres@db:5432/final_project?sslmode=disable", "Postgres connection string")
+	envFilePath := "configs/api.env"
+	err := godotenv.Load(envFilePath)
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+
+	// Создайте строку подключения
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPassword, dbHost, dbPort, dbName)
+
+	flag.StringVar(&app.DSN, "dsn", connStr, "Postgres connection string")
+
 	flag.Parse()
 
 	//база данных
