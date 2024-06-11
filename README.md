@@ -13,33 +13,33 @@
 
 Тело запроса:
 
-```sh
+```json
 {
-        "id": 3,
-        "title": "Kashtanka",
-        "author": "Антон Чехов",
-        "year": 1887,
-        "isbn": "975-7-759-06256-6"
+  "id": 3,
+  "title": "Kashtanka",
+  "author": "Антон Чехов",
+  "year": 1887,
+  "isbn": "975-7-759-06256-6"
 }
 ```
 
 Ответ:
 201 Created: Книга успешно добавлена.
 
-```sh
+```json
 {
-    "error": false,
-    "message": "Книга с id 5 успешно добавлена"
+  "error": false,
+  "message": "Книга с id 5 успешно добавлена"
 }
 ```
 
 400 Bad Request: Некорректные данные в запросе.
 возвращается json
 
-```sh
+```json
 {
-    "error": true,
-    "message": "json: unknown field \"birthdy\""
+  "error": true,
+  "message": "json: unknown field \"birthdy\""
 }
 ```
 
@@ -59,10 +59,10 @@
 200 OK: Возвращает данные книги.
 404 Not Found: Книга с указанным идентификатором не найдена.
 
-```sh
+```json
 {
-    "error": true,
-    "message": "sql: no rows in result set"
+  "error": true,
+  "message": "sql: no rows in result set"
 }
 ```
 
@@ -72,41 +72,41 @@
 
 Тело запроса:
 
-```sh
+```json
 {
-    "id": 3,
-    "title": "Kashtanka",
-    "author": "Антон Чехов",
-    "year": 1897,
-    "isbn": "975-7-759-06256-6"
+  "id": 3,
+  "title": "Kashtanka",
+  "author": "Антон Чехов",
+  "year": 1897,
+  "isbn": "975-7-759-06256-6"
 }
 ```
 
 Ответ:
 200 OK: Книга успешно обновлена.
 
-```sh
+```json
 {
-    "error": false,
-    "message": "Книга c id 3 успешно обновлена"
+  "error": false,
+  "message": "Книга c id 3 успешно обновлена"
 }
 ```
 
 400 Bad Request: Некорректные данные в запросе.
 
-```sh
+```json
 {
-    "error": true,
-    "message": "json: unknown field \"author\""
+  "error": true,
+  "message": "json: unknown field \"author\""
 }
 ```
 
 404 Not Found: Книга с указанным идентификатором не найдена.
 
-```sh
+```json
 {
-    "error": true,
-    "message": "sql: no rows in result set"
+  "error": true,
+  "message": "sql: no rows in result set"
 }
 ```
 
@@ -117,19 +117,19 @@
 Ответ:
 200 OK: Книга успешно удалена.
 
-```sh
+```json
 {
-    "error": false,
-    "message": "Книга успешно удалена"
+  "error": false,
+  "message": "Книга успешно удалена"
 }
 ```
 
 404 Not Found: Книга с указанным идентификатором не найдена.
 
-```sh
+```json
 {
-    "error": true,
-    "message": "sql: no rows in result set"
+  "error": true,
+  "message": "sql: no rows in result set"
 }
 ```
 
@@ -141,31 +141,31 @@
 
 Тело запроса:
 
-```sh
+```json
 {
-    "name_author": "Антон",
-    "sirname_author": "Чехов",
-    "biography": "Русский писатель, драматург и врач.",
-    "birthday": "1860-01-29"
+  "name_author": "Антон",
+  "sirname_author": "Чехов",
+  "biography": "Русский писатель, драматург и врач.",
+  "birthday": "1860-01-29"
 }
 ```
 
 Ответ:
 201 Created: Автор успешно добавлен.
 
-```sh
+```json
 {
-    "error": false,
-    "message": "Автор с id 9 успешно добавлен"
+  "error": false,
+  "message": "Автор с id 9 успешно добавлен"
 }
 ```
 
 400 Bad Request: Некорректные данные в запросе.
 
-```sh
+```json
 {
-    "error": true,
-    "message": "json: unknown field \"bivography\""
+  "error": true,
+  "message": "json: unknown field \"bivography\""
 }
 ```
 
@@ -185,10 +185,10 @@
 200 OK: Возвращает данные автора.
 404 Not Found: Автор с указанным идентификатором не найден.
 
-```sh
+```json
 {
-    "error": true,
-    "message": "sql: no rows in result set"
+  "error": true,
+  "message": "sql: no rows in result set"
 }
 ```
 
@@ -198,40 +198,40 @@
 
 Тело запроса:
 
-```sh
+```json
 {
-    "name_author": "Антон",
-    "sirname_author": "Чехов",
-    "biography": "Русский писатель, драматург и врач.",
-    "birthday": "1890-01-29"
+  "name_author": "Антон",
+  "sirname_author": "Чехов",
+  "biography": "Русский писатель, драматург и врач.",
+  "birthday": "1890-01-29"
 }
 ```
 
 Ответ:
 200 OK: Автор успешно обновлен.
 
-```sh
+```json
 {
-    "error": false,
-    "message": "Автор успешно обновлен"
+  "error": false,
+  "message": "Автор успешно обновлен"
 }
 ```
 
 400 Bad Request: Некорректные данные в запросе.
 
-```sh
+```json
 {
-    "error": true,
-    "message": "json: unknown field \"birthdsay\""
+  "error": true,
+  "message": "json: unknown field \"birthdsay\""
 }
 ```
 
 404 Not Found: Автор с указанным идентификатором не найден.
 
-```sh
+```json
 {
-    "error": true,
-    "message": "sql: no rows in result set"
+  "error": true,
+  "message": "sql: no rows in result set"
 }
 ```
 
@@ -242,10 +242,10 @@
 Ответ:
 200 OK: Автор успешно удален.
 
-```sh
+```json
 {
-    "error": false,
-    "message": "Автор с id 7 успешно удален"
+  "error": false,
+  "message": "Автор с id 7 успешно удален"
 }
 ```
 
@@ -263,15 +263,15 @@
 
 Тело запроса:
 
-```sh
+```json
 {
-    "name_author": "Антон",
-    "sirname_author": "Чехов",
-    "biography": "Русский писатель, драматург и врач.",
-    "birthday": "1860-01-29",
-     "title": "Kashtanka",
-    "author_id": 4,
-    "year": 1887,
+  "name_author": "Антон",
+  "sirname_author": "Чехов",
+  "biography": "Русский писатель, драматург и врач.",
+  "birthday": "1860-01-29",
+  "title": "Kashtanka",
+  "author_id": 4,
+  "year": 1887,
   "isbn": "975-7-759-06256-6"
 }
 ```
@@ -279,27 +279,27 @@
 Ответ:
 200 OK: Книга и автор успешно обновлены.
 
-```sh
+```json
 {
-    "error": false,
-    "message": "Автор и книга успешно обновлены"
+  "error": false,
+  "message": "Автор и книга успешно обновлены"
 }
 ```
 
 400 Bad Request: Некорректные данные в запросе.
 
-```sh
+```json
 {
-    "error": true,
-    "message": "json: unknown field \"nam_author\""
+  "error": true,
+  "message": "json: unknown field \"nam_author\""
 }
 ```
 
 404 Not Found: Книга или автор с указанными идентификаторами не найдены.
 
-```sh
+```json
 {
-    "error": true,
-    "message": "sql: no rows in result set"
+  "error": true,
+  "message": "sql: no rows in result set"
 }
 ```
