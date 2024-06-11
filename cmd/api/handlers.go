@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+
 	"github.com/hentan/final_project/internal/models"
 )
 
@@ -76,22 +77,29 @@ func (app *application) InsertBook(w http.ResponseWriter, r *http.Request) {
 		Message: fmt.Sprintf("Книга с id %d успешно добавлена", newID),
 	}
 
-	app.writeJSON(w, http.StatusAccepted, resp)
+	app.writeJSON(w, http.StatusCreated, resp)
 
 }
 
 func (app *application) UpdateBook(w http.ResponseWriter, r *http.Request) {
+
+	id := chi.URLParam(r, "id")
+	ID, err := strconv.Atoi(id)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+
 	var payload models.BookID
 
-	err := app.readJSON(w, r, &payload)
+	err = app.readJSON(w, r, &payload)
 	if err != nil {
 		app.errorJSON(w, err)
 		return
 	}
 
-	book, err := app.DB.OneBook(payload.ID)
+	book, err := app.DB.OneBook(ID)
 	if err != nil {
-		app.errorJSON(w, err)
+		app.errorJSON(w, err, 404)
 		return
 	}
 
@@ -108,10 +116,12 @@ func (app *application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	resp := JSONResponce{
 		Error:   false,
-		Message: "Книга успешно обновлена",
+		Message: fmt.Sprintf("Книга c id %d успешно обновлена", ID),
 	}
 
-	app.writeJSON(w, http.StatusAccepted, resp)
+	fmt.Println(resp)
+
+	app.writeJSON(w, http.StatusOK, resp)
 
 }
 
@@ -122,6 +132,12 @@ func (app *application) DeleteBook(w http.ResponseWriter, r *http.Request) {
 		app.errorJSON(w, err)
 	}
 
+	_, err = app.DB.OneBook(ID)
+	if err != nil {
+		app.errorJSON(w, err, 404)
+		return
+	}
+
 	err = app.DB.DeleteBook(ID)
 	if err != nil {
 		app.errorJSON(w, err)
@@ -130,10 +146,10 @@ func (app *application) DeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	resp := JSONResponce{
 		Error:   false,
-		Message: fmt.Sprintf("Книга с id %d успешно удалена", ID),
+		Message: fmt.Sprintf("Книга c id %d успешно удалена", ID),
 	}
 
-	app.writeJSON(w, http.StatusAccepted, resp)
+	app.writeJSON(w, http.StatusOK, resp)
 
 }
 
@@ -185,22 +201,29 @@ func (app *application) InsertAuthor(w http.ResponseWriter, r *http.Request) {
 		Message: fmt.Sprintf("Автор с id %d успешно добавлен", newID),
 	}
 
-	app.writeJSON(w, http.StatusAccepted, resp)
+	app.writeJSON(w, http.StatusCreated, resp)
 
 }
 
 func (app *application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
+
+	id := chi.URLParam(r, "id")
+	ID, err := strconv.Atoi(id)
+	if err != nil {
+		app.errorJSON(w, err)
+	}
+
 	var payload models.Author
 
-	err := app.readJSON(w, r, &payload)
+	err = app.readJSON(w, r, &payload)
 	if err != nil {
 		app.errorJSON(w, err)
 		return
 	}
 
-	author, err := app.DB.OneAuthor(payload.ID)
+	author, err := app.DB.OneAuthor(ID)
 	if err != nil {
-		app.errorJSON(w, err)
+		app.errorJSON(w, err, 404)
 		return
 	}
 
@@ -217,10 +240,10 @@ func (app *application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 
 	resp := JSONResponce{
 		Error:   false,
-		Message: "Автор успешно обновлен",
+		Message: fmt.Sprintf("Автор с id %d успешно обновлен", ID),
 	}
 
-	app.writeJSON(w, http.StatusAccepted, resp)
+	app.writeJSON(w, http.StatusOK, resp)
 
 }
 
@@ -229,6 +252,12 @@ func (app *application) DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 	ID, err := strconv.Atoi(id)
 	if err != nil {
 		app.errorJSON(w, err)
+	}
+
+	_, err = app.DB.OneAuthor(ID)
+	if err != nil {
+		app.errorJSON(w, err, 404)
+		return
 	}
 
 	err = app.DB.DeleteAuthor(ID)
@@ -242,7 +271,7 @@ func (app *application) DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 		Message: fmt.Sprintf("Автор с id %d успешно удален", ID),
 	}
 
-	app.writeJSON(w, http.StatusAccepted, resp)
+	app.writeJSON(w, http.StatusOK, resp)
 
 }
 
@@ -269,13 +298,13 @@ func (app *application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Reque
 
 	author, err := app.DB.OneAuthor(ID_author)
 	if err != nil {
-		app.errorJSON(w, err)
+		app.errorJSON(w, err, 404)
 		return
 	}
 
 	book, err := app.DB.OneBook(ID_book)
 	if err != nil {
-		app.errorJSON(w, err)
+		app.errorJSON(w, err, 404)
 		return
 	}
 
