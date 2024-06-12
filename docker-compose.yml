@@ -19,14 +19,14 @@ services:
     ports:
       - "5434:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-data:/var/lib/postgresql/data
 
   migrate:
     image: migrate/migrate
     networks:
       - new
     volumes:
-      - ./db/migration:/migrations # before : -local path, after : - path in docker
+      - ./db/migration:/migrations
     command:
       [
         "-path",
@@ -51,9 +51,7 @@ services:
       - new
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
+    command: ["sh", "-c", "sleep 10 && ./main"]
 
 networks:
   new:
-
-volumes:
-  postgres_data:
