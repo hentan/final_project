@@ -1,8 +1,6 @@
-# Переменные
 COMPOSE_FILE=docker-compose.yml
 ENV_FILE=.env
 
-# Цели
 .PHONY: all build up down logs
 
 all: build up
