@@ -9,7 +9,7 @@
 - `cmd/api/handlers.go`: обработчики HTTP-запросов.
 - `cmd/api/routes.go`: маршрутизация.
 - `internal/models`: Модели для работы с json
-- `internal/repository`: Описание базы данных
+- `internal/repository`: Работа с базой данных
 - `db/migrations`: SQL файлы для миграции базы данных.
 - `Dockerfile`: Инструкции для сборки Docker-образа.
 - `docker-compose.yml`: Конфигурация Docker Compose.
@@ -85,7 +85,3 @@ DELETE /authors/{id}: Удалить автора по его идентифик
 PUT /books/{book_id}/authors/{author_id}: Одновременно обновить сведения о книге и авторе
 
 Более подробное описание методов в файле [Документация API методов](Документация_API_методов.md)
-
-```
-
-```
