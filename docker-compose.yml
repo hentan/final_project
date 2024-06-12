@@ -26,7 +26,7 @@ services:
     networks:
       - new
     volumes:
-      - ./db/migration:/migrations # before : -local path, after : - path in docker
+      - ./db/migration:/migrations
       - ./wait-for-it.sh:/wait-for-it.sh
     entrypoint: ["/bin/sh", "/wait-for-it.sh"]
     command:
@@ -52,9 +52,12 @@ services:
       - postgres
     networks:
       - new
+    volumes:
+      - ./wait-for-it.sh:/wait-for-it.sh
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable
-    command: ["sh", "-c", "sleep 10 && ./main"]
+    entrypoint: ["/bin/sh", "/wait-for-it.sh"]
+    command: ["./main"]
 
 networks:
   new:
