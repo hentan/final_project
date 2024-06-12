@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func (app *application) routes() http.Handler {
+func Routes(app *Application) http.Handler {
 	//mux роутер
 	mux := chi.NewRouter()
 	mux.Use(middleware.Recoverer)

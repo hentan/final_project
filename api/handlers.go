@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/hentan/final_project/internal/models"
 )
 
-func (app *application) Home(w http.ResponseWriter, r *http.Request) {
+func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
 	var payload = struct {
 		Status  string `json:"status"`
 		Message string `json:"message"`
@@ -24,7 +24,7 @@ func (app *application) Home(w http.ResponseWriter, r *http.Request) {
 	_ = app.writeJSON(w, http.StatusOK, payload)
 }
 
-func (app *application) AllBooks(w http.ResponseWriter, r *http.Request) {
+func (app *Application) AllBooks(w http.ResponseWriter, r *http.Request) {
 
 	books, err := app.DB.AllBooks()
 	if err != nil {
@@ -36,7 +36,7 @@ func (app *application) AllBooks(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *application) GetBook(w http.ResponseWriter, r *http.Request) {
+func (app *Application) GetBook(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	bookID, err := strconv.Atoi(id)
 	if err != nil {
@@ -51,7 +51,7 @@ func (app *application) GetBook(w http.ResponseWriter, r *http.Request) {
 	_ = app.writeJSON(w, http.StatusOK, book)
 }
 
-func (app *application) InsertBook(w http.ResponseWriter, r *http.Request) {
+func (app *Application) InsertBook(w http.ResponseWriter, r *http.Request) {
 	var bookWithID models.BookID
 
 	err := app.readJSON(w, r, &bookWithID)
@@ -81,7 +81,7 @@ func (app *application) InsertBook(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *application) UpdateBook(w http.ResponseWriter, r *http.Request) {
+func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
@@ -125,7 +125,7 @@ func (app *application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *application) DeleteBook(w http.ResponseWriter, r *http.Request) {
+func (app *Application) DeleteBook(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
@@ -155,7 +155,7 @@ func (app *application) DeleteBook(w http.ResponseWriter, r *http.Request) {
 
 // с этой строки и ниже действия с авторами
 
-func (app *application) AllAuthors(w http.ResponseWriter, r *http.Request) {
+func (app *Application) AllAuthors(w http.ResponseWriter, r *http.Request) {
 
 	books, err := app.DB.AllAuthors()
 	if err != nil {
@@ -167,7 +167,7 @@ func (app *application) AllAuthors(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *application) GetAuthor(w http.ResponseWriter, r *http.Request) {
+func (app *Application) GetAuthor(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	authorID, err := strconv.Atoi(id)
 	if err != nil {
@@ -182,7 +182,7 @@ func (app *application) GetAuthor(w http.ResponseWriter, r *http.Request) {
 	_ = app.writeJSON(w, http.StatusOK, author)
 }
 
-func (app *application) InsertAuthor(w http.ResponseWriter, r *http.Request) {
+func (app *Application) InsertAuthor(w http.ResponseWriter, r *http.Request) {
 	var author models.Author
 
 	err := app.readJSON(w, r, &author)
@@ -205,7 +205,7 @@ func (app *application) InsertAuthor(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
+func (app *Application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
@@ -247,7 +247,7 @@ func (app *application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *application) DeleteAuthor(w http.ResponseWriter, r *http.Request) {
+func (app *Application) DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
@@ -275,7 +275,7 @@ func (app *application) DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Request) {
+func (app *Application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Request) {
 	id_book := chi.URLParam(r, "id_book")
 	ID_book, err := strconv.Atoi(id_book)
 	if err != nil {
