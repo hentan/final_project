@@ -1,4 +1,4 @@
-package api
+package handlers
 
 import (
 	"encoding/json"
@@ -6,14 +6,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/hentan/final_project/internal/repository"
+	_ "github.com/hentan/final_project/internal/repository"
 )
-
-type Application struct {
-	DSN    string
-	Domain string
-	DB     repository.DatabaseRepo
-}
 
 type JSONResponce struct {
 	Error   bool        `json:"error"`

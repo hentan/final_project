@@ -1,4 +1,4 @@
-package api
+package handlers
 
 import (
 	"fmt"
@@ -8,7 +8,14 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/hentan/final_project/internal/models"
+	"github.com/hentan/final_project/internal/repository"
 )
+
+type Application struct {
+	DSN    string
+	Domain string
+	DB     repository.DatabaseRepo
+}
 
 func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
 	var payload = struct {

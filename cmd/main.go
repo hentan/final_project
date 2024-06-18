@@ -9,14 +9,15 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/hentan/final_project/api"
+	"github.com/hentan/final_project/internal/handlers"
 	"github.com/hentan/final_project/internal/repository/dbrepo"
+	"github.com/hentan/final_project/internal/services"
 )
 
 const port = 8080
 
 func main() {
-	var app api.Application
+	var app handlers.Application
 
 	envFilePath := "configs/api.env"
 	err := godotenv.Load(envFilePath)
@@ -38,7 +39,7 @@ func main() {
 	flag.Parse()
 
 	// база данных
-	conn, err := api.ConnectToDB(app.DSN)
+	conn, err := services.ConnectToDB(app.DSN)
 	if err != nil {
 		log.Println("не удалось подключить к БД!")
 		log.Fatal(err)
@@ -51,7 +52,7 @@ func main() {
 	log.Println("Старт приложения на порту:", port)
 
 	// старт сервера
-	err = http.ListenAndServe(fmt.Sprintf(":%d", port), api.Routes(&app))
+	err = http.ListenAndServe(fmt.Sprintf(":%d", port), handlers.Routes(&app))
 	if err != nil {
 		log.Fatal("привет", err)
 	}

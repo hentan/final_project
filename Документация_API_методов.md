@@ -74,9 +74,8 @@
 
 ```json
 {
-  "id": 3,
   "title": "Kashtanka",
-  "author": "Антон Чехов",
+  "author_id": 3,
   "year": 1897,
   "isbn": "975-7-759-06256-6"
 }
