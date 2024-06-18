@@ -1,5 +1,5 @@
 COMPOSE_FILE=docker-compose.yml
-ENV_FILE=.env
+ENV_FILE=configs/api.env
 
 .PHONY: all build up down logs
 

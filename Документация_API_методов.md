@@ -265,14 +265,18 @@
 
 ```json
 {
-  "name_author": "Антон",
-  "sirname_author": "Чехов",
-  "biography": "Русский писатель, драматург и врач.",
-  "birthday": "1860-01-29",
-  "title": "Kashtanka",
-  "author_id": 4,
-  "year": 1887,
-  "isbn": "975-7-759-06256-6"
+  "author": {
+    "name_author": "Антон",
+    "sirname_author": "Чехов",
+    "biography": "Русский писатель, драматург и врач.",
+    "birthday": "1890-01-29"
+  },
+  "book": {
+    "title": "Kashtanka",
+    "author_id": 3,
+    "year": 1887,
+    "isbn": "975-7-759-06256-6"
+  }
 }
 ```
 

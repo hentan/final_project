@@ -308,14 +308,14 @@ func (app *Application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	author.NameAuthor = payload.NameAuthor
-	author.SirnameAuthor = payload.SirnameAuthor
-	author.Biography = payload.Biography
-	author.Birthday = payload.Birthday
-	book.Title = payload.Title
-	book.Author = strconv.Itoa(payload.AuthorID)
-	book.Year = payload.Year
-	book.ISBN = payload.ISBN
+	author.NameAuthor = payload.Author.NameAuthor
+	author.SirnameAuthor = payload.Author.SirnameAuthor
+	author.Biography = payload.Author.Biography
+	author.Birthday = payload.Author.Birthday
+	book.Title = payload.Book.Title
+	book.Author = strconv.Itoa(payload.Book.AuthorID)
+	book.Year = payload.Book.Year
+	book.ISBN = payload.Book.ISBN
 
 	err = app.DB.UpdateAuthorAndBook(*author, *book)
 	if err != nil {
