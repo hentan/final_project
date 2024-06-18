@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 
@@ -13,8 +14,6 @@ import (
 	"github.com/hentan/final_project/internal/repository/dbrepo"
 	"github.com/hentan/final_project/internal/services"
 )
-
-const port = 8080
 
 func main() {
 	var app handlers.Application
@@ -30,6 +29,7 @@ func main() {
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
+	appPort, _ := strconv.Atoi(os.Getenv("APP_PORT"))
 
 	// create connection string from env
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPassword, dbHost, dbPort, dbName)
@@ -38,7 +38,7 @@ func main() {
 
 	flag.Parse()
 
-	// база данных
+	// start database
 	conn, err := services.ConnectToDB(app.DSN)
 	if err != nil {
 		log.Println("не удалось подключить к БД!")
@@ -47,12 +47,11 @@ func main() {
 
 	app.DB = &dbrepo.PostgresDBRepo{DB: conn}
 	defer app.DB.Connection().Close()
-	app.Domain = "example.com"
 
-	log.Println("Старт приложения на порту:", port)
+	log.Println("Старт приложения на порту:", appPort)
 
-	// старт сервера
-	err = http.ListenAndServe(fmt.Sprintf(":%d", port), handlers.Routes(&app))
+	// start server
+	err = http.ListenAndServe(fmt.Sprintf(":%d", appPort), handlers.Routes(&app))
 	if err != nil {
 		log.Fatal("привет", err)
 	}
