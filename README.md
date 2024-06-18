@@ -5,9 +5,10 @@
 ## Структура проекта
 
 - `cmd/main.go`: Главный файл приложения.
-- `api/db.go`: Подключение к базе данных.
-- `api/handlers.go`: обработчики HTTP-запросов.
-- `api/routes.go`: маршрутизация.
+- `interal/services/db.go`: Подключение к базе данных.
+- `interal/handlers/handlers.go`: обработчики HTTP-запросов.
+- `interal/handlers/routes.go`: маршрутизация.
+- `interal/handlers/json_handlers`: вспомогательные функции для обработки запроса/ответа/возвращения ошибок
 - `internal/models`: Модели для работы с json
 - `internal/repository`: Работа с базой данных
 - `db/migrations`: SQL файлы для миграции базы данных.
