@@ -67,15 +67,9 @@ func (app *Application) InsertBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var book models.Book
-	book.ID = bookWithID.ID
-	book.Title = bookWithID.Title
-	book.Author = strconv.Itoa(bookWithID.AuthorID)
-	book.Year = bookWithID.Year
-	book.ISBN = bookWithID.ISBN
-
-	newID, err := app.DB.InsertBook(book)
+	newID, err := app.DB.InsertBook(bookWithID)
 	if err != nil {
+		app.errorJSON(w, err)
 		return
 	}
 
@@ -200,6 +194,7 @@ func (app *Application) InsertAuthor(w http.ResponseWriter, r *http.Request) {
 
 	newID, err := app.DB.InsertAuthor(author)
 	if err != nil {
+		app.errorJSON(w, err)
 		return
 	}
 

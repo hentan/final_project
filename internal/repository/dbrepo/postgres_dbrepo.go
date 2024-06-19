@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/hentan/final_project/internal/models"
@@ -82,7 +83,7 @@ func (m *PostgresDBRepo) OneBook(id int) (*models.Book, error) {
 	return &book, err
 }
 
-func (m *PostgresDBRepo) InsertBook(book models.Book) (int, error) {
+func (m *PostgresDBRepo) InsertBook(book models.BookID) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -93,14 +94,17 @@ func (m *PostgresDBRepo) InsertBook(book models.Book) (int, error) {
 
 	var newID int
 
+	log.Println(book)
+
 	err := m.DB.QueryRowContext(ctx, query,
 		book.Title,
-		book.Author,
+		book.AuthorID,
 		book.Year,
 		book.ISBN,
 	).Scan(&newID)
 
 	if err != nil {
+		log.Println("Ошибка тут!!!!!")
 		return 0, err
 	}
 
