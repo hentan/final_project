@@ -12,10 +12,11 @@ import (
 )
 
 type Application struct {
-	DSN    string
-	Domain string
-	DB     repository.DatabaseRepo
-	DBConf repository.ConfigDB
+	DSN     string
+	Domain  string
+	DB      repository.DatabaseRepo
+	DBConf  repository.ConfigDB
+	AppPort repository.PortApp
 }
 
 func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
