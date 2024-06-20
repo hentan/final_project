@@ -15,6 +15,7 @@ type Application struct {
 	DSN    string
 	Domain string
 	DB     repository.DatabaseRepo
+	DBConf repository.ConfigDB
 }
 
 func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
