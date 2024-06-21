@@ -1,4 +1,4 @@
-package dbrepo
+package repository
 
 import (
 	"context"
@@ -7,20 +7,53 @@ import (
 	"log"
 	"time"
 
+	_ "github.com/jackc/pgconn"
+	_ "github.com/jackc/pgx/v4"
+	_ "github.com/jackc/pgx/v4/stdlib"
+
+	"github.com/hentan/final_project/internal/config"
 	"github.com/hentan/final_project/internal/models"
 )
 
-type PostgresDBRepo struct {
-	DB *sql.DB
+type postgresDBRepo struct {
+	db *sql.DB
+}
+
+func New(cfg config.ConfigDB) DatabaseRepo {
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Name)
+
+	db, err := connectToDB(connStr)
+	if err != nil {
+		log.Fatal("Couldn't connect to DB: %v", err)
+	}
+
+	return &postgresDBRepo{
+		db: db,
+	}
+}
+
+func connectToDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("pgx", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+	log.Println("успешное подключение к БД!")
+	return db, nil
 }
 
 const dbTimeout = time.Second * 3
 
-func (m *PostgresDBRepo) Connection() *sql.DB {
-	return m.DB
+func (m *postgresDBRepo) Connection() *sql.DB {
+	return m.db //поправить на маленькие
 }
 
-func (m *PostgresDBRepo) AllBooks() ([]*models.Book, error) {
+func (m *postgresDBRepo) AllBooks() ([]*models.Book, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -31,7 +64,7 @@ func (m *PostgresDBRepo) AllBooks() ([]*models.Book, error) {
         order by name_book
     `
 
-	rows, err := m.DB.QueryContext(ctx, query)
+	rows, err := m.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +91,7 @@ func (m *PostgresDBRepo) AllBooks() ([]*models.Book, error) {
 	return books, nil
 }
 
-func (m *PostgresDBRepo) OneBook(id int) (*models.Book, error) {
+func (m *postgresDBRepo) OneBook(id int) (*models.Book, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -68,7 +101,7 @@ func (m *PostgresDBRepo) OneBook(id int) (*models.Book, error) {
         inner join authors a on b.author_id = a.id
         where b.id =$1
     `
-	row := m.DB.QueryRowContext(ctx, query, id)
+	row := m.db.QueryRowContext(ctx, query, id)
 	var book models.Book
 	err := row.Scan(
 		&book.ID,
@@ -83,7 +116,7 @@ func (m *PostgresDBRepo) OneBook(id int) (*models.Book, error) {
 	return &book, err
 }
 
-func (m *PostgresDBRepo) InsertBook(book models.BookID) (int, error) {
+func (m *postgresDBRepo) InsertBook(book models.BookID) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -96,7 +129,7 @@ func (m *PostgresDBRepo) InsertBook(book models.BookID) (int, error) {
 
 	log.Println(book)
 
-	err := m.DB.QueryRowContext(ctx, query,
+	err := m.db.QueryRowContext(ctx, query,
 		book.Title,
 		book.AuthorID,
 		book.Year,
@@ -111,7 +144,7 @@ func (m *PostgresDBRepo) InsertBook(book models.BookID) (int, error) {
 	return newID, nil
 }
 
-func (m *PostgresDBRepo) UpdateBook(book models.Book) error {
+func (m *postgresDBRepo) UpdateBook(book models.Book) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -120,7 +153,7 @@ func (m *PostgresDBRepo) UpdateBook(book models.Book) error {
 		where id = $5
     `
 
-	_, err := m.DB.ExecContext(ctx, query,
+	_, err := m.db.ExecContext(ctx, query,
 		book.Title,
 		book.Author,
 		book.Year,
@@ -135,7 +168,7 @@ func (m *PostgresDBRepo) UpdateBook(book models.Book) error {
 	return nil
 }
 
-func (m *PostgresDBRepo) DeleteBook(id int) error {
+func (m *postgresDBRepo) DeleteBook(id int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -143,7 +176,7 @@ func (m *PostgresDBRepo) DeleteBook(id int) error {
         delete from books where id = $1
     `
 
-	_, err := m.DB.ExecContext(ctx, query, id)
+	_, err := m.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
@@ -153,7 +186,7 @@ func (m *PostgresDBRepo) DeleteBook(id int) error {
 
 //здесь и далее действия с авторами
 
-func (m *PostgresDBRepo) AllAuthors() ([]*models.Author, error) {
+func (m *postgresDBRepo) AllAuthors() ([]*models.Author, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -163,7 +196,7 @@ func (m *PostgresDBRepo) AllAuthors() ([]*models.Author, error) {
         order by name_author
     `
 
-	rows, err := m.DB.QueryContext(ctx, query)
+	rows, err := m.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +223,7 @@ func (m *PostgresDBRepo) AllAuthors() ([]*models.Author, error) {
 	return authors, nil
 }
 
-func (m *PostgresDBRepo) OneAuthor(id int) (*models.Author, error) {
+func (m *postgresDBRepo) OneAuthor(id int) (*models.Author, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -199,7 +232,7 @@ func (m *PostgresDBRepo) OneAuthor(id int) (*models.Author, error) {
 		from authors
         where id =$1
     `
-	row := m.DB.QueryRowContext(ctx, query, id)
+	row := m.db.QueryRowContext(ctx, query, id)
 	var author models.Author
 	err := row.Scan(
 		&author.ID,
@@ -214,7 +247,7 @@ func (m *PostgresDBRepo) OneAuthor(id int) (*models.Author, error) {
 	return &author, err
 }
 
-func (m *PostgresDBRepo) InsertAuthor(author models.Author) (int, error) {
+func (m *postgresDBRepo) InsertAuthor(author models.Author) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -230,7 +263,7 @@ func (m *PostgresDBRepo) InsertAuthor(author models.Author) (int, error) {
 
 	var newID int
 
-	err = m.DB.QueryRowContext(ctx, query,
+	err = m.db.QueryRowContext(ctx, query,
 		author.NameAuthor,
 		author.SirnameAuthor,
 		author.Biography,
@@ -244,7 +277,7 @@ func (m *PostgresDBRepo) InsertAuthor(author models.Author) (int, error) {
 	return newID, nil
 }
 
-func (m *PostgresDBRepo) UpdateAuthor(author models.Author) error {
+func (m *postgresDBRepo) UpdateAuthor(author models.Author) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -255,7 +288,7 @@ func (m *PostgresDBRepo) UpdateAuthor(author models.Author) error {
 
 	fmt.Println(author.ID, author.Birthday)
 
-	_, err := m.DB.ExecContext(ctx, query,
+	_, err := m.db.ExecContext(ctx, query,
 		author.NameAuthor,
 		author.SirnameAuthor,
 		author.Biography,
@@ -270,7 +303,7 @@ func (m *PostgresDBRepo) UpdateAuthor(author models.Author) error {
 	return nil
 }
 
-func (m *PostgresDBRepo) DeleteAuthor(id int) error {
+func (m *postgresDBRepo) DeleteAuthor(id int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -278,7 +311,7 @@ func (m *PostgresDBRepo) DeleteAuthor(id int) error {
         delete from authors where id = $1
     `
 
-	_, err := m.DB.ExecContext(ctx, query, id)
+	_, err := m.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
@@ -286,11 +319,11 @@ func (m *PostgresDBRepo) DeleteAuthor(id int) error {
 	return nil
 }
 
-func (m *PostgresDBRepo) UpdateAuthorAndBook(author models.Author, book models.Book) error {
+func (m *postgresDBRepo) UpdateAuthorAndBook(author models.Author, book models.Book) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	tx, err := m.DB.Begin()
+	tx, err := m.db.Begin()
 	if err != nil {
 		return err
 	}
@@ -300,7 +333,7 @@ func (m *PostgresDBRepo) UpdateAuthorAndBook(author models.Author, book models.B
 		where id = $5
     `
 
-	_, err = m.DB.ExecContext(ctx, query,
+	_, err = m.db.ExecContext(ctx, query,
 		author.NameAuthor,
 		author.SirnameAuthor,
 		author.Biography,
@@ -318,7 +351,7 @@ func (m *PostgresDBRepo) UpdateAuthorAndBook(author models.Author, book models.B
 		where id = $5
     `
 
-	_, err = m.DB.ExecContext(ctx, query,
+	_, err = m.db.ExecContext(ctx, query,
 		book.Title,
 		book.Author,
 		book.Year,

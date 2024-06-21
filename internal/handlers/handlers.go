@@ -7,16 +7,46 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/hentan/final_project/internal/config"
 	"github.com/hentan/final_project/internal/models"
 	"github.com/hentan/final_project/internal/repository"
 )
 
 type Application struct {
-	DSN     string
-	Domain  string
-	DB      repository.DatabaseRepo
-	DBConf  repository.ConfigDB
-	AppPort repository.PortApp
+	Domain     string
+	DB         repository.DatabaseRepo
+	ServerConf config.Server
+}
+
+type Handler interface {
+	Start(h http.Handler) error
+	Home(w http.ResponseWriter, r *http.Request)
+	AllBooks(w http.ResponseWriter, r *http.Request)
+	GetBook(w http.ResponseWriter, r *http.Request)
+	InsertBook(w http.ResponseWriter, r *http.Request)
+	UpdateBook(w http.ResponseWriter, r *http.Request)
+	DeleteBook(w http.ResponseWriter, r *http.Request)
+	AllAuthors(w http.ResponseWriter, r *http.Request)
+	GetAuthor(w http.ResponseWriter, r *http.Request)
+	UpdateAuthor(w http.ResponseWriter, r *http.Request)
+	InsertAuthor(w http.ResponseWriter, r *http.Request)
+	DeleteAuthor(w http.ResponseWriter, r *http.Request)
+	UpdateAuthorAndBook(w http.ResponseWriter, r *http.Request)
+}
+
+func (app *Application) Start(h http.Handler) error {
+	err := http.ListenAndServe(app.ServerConf.Port, h)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func New(db repository.DatabaseRepo, cfg config.Server) Handler {
+	return &Application{
+		DB:         db,
+		ServerConf: cfg,
+	}
 }
 
 func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
