@@ -10,7 +10,7 @@ type DatabaseRepo interface {
 	Connection() *sql.DB
 	AllBooks() ([]*models.Book, error)
 	OneBook(id int) (*models.Book, error)
-	InsertBook(book models.BookID) (int, error)
+	InsertBook(book models.Book) (int, error)
 	UpdateBook(book models.Book) error
 	DeleteBook(id int) error
 	AllAuthors() ([]*models.Author, error)

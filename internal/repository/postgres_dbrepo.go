@@ -116,7 +116,7 @@ func (m *postgresDBRepo) OneBook(id int) (*models.Book, error) {
 	return &book, err
 }
 
-func (m *postgresDBRepo) InsertBook(book models.BookID) (int, error) {
+func (m *postgresDBRepo) InsertBook(book models.Book) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -152,7 +152,7 @@ func (m *postgresDBRepo) UpdateBook(book models.Book) error {
 
 	_, err := m.db.ExecContext(ctx, query,
 		book.Title,
-		book.Author,
+		book.AuthorID,
 		book.Year,
 		book.ISBN,
 		book.ID,
@@ -350,7 +350,7 @@ func (m *postgresDBRepo) UpdateAuthorAndBook(author models.Author, book models.B
 
 	_, err = m.db.ExecContext(ctx, query,
 		book.Title,
-		book.Author,
+		book.AuthorID,
 		book.Year,
 		book.ISBN,
 		book.ID,

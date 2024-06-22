@@ -93,7 +93,7 @@ func (app *Application) GetBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) InsertBook(w http.ResponseWriter, r *http.Request) {
-	var bookWithID models.BookID
+	var bookWithID models.Book
 
 	err := app.readJSON(w, r, &bookWithID)
 	if err != nil {
@@ -124,7 +124,7 @@ func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 		app.errorJSON(w, err)
 	}
 
-	var payload models.BookID
+	var payload models.Book
 
 	err = app.readJSON(w, r, &payload)
 	if err != nil {
@@ -139,7 +139,7 @@ func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	book.Title = payload.Title
-	book.Author = strconv.Itoa(payload.AuthorID)
+	book.AuthorID = payload.AuthorID
 	book.Year = payload.Year
 	book.ISBN = payload.ISBN
 
@@ -347,7 +347,7 @@ func (app *Application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Reque
 	author.Biography = payload.Author.Biography
 	author.Birthday = payload.Author.Birthday
 	book.Title = payload.Book.Title
-	book.Author = strconv.Itoa(payload.Book.AuthorID)
+	book.AuthorID = ID_author
 	book.Year = payload.Book.Year
 	book.ISBN = payload.Book.ISBN
 
