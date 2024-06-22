@@ -5,12 +5,12 @@
 ## Структура проекта
 
 - `cmd/main.go`: Главный файл приложения.
-- `interal/services/db.go`: Подключение к базе данных.
+- `interal/config`: чтение файла конфигурации.
 - `interal/handlers/handlers.go`: обработчики HTTP-запросов.
 - `interal/handlers/routes.go`: маршрутизация.
 - `interal/handlers/json_handlers`: вспомогательные функции для обработки запроса/ответа/возвращения ошибок
 - `internal/models`: Модели для работы с json
-- `internal/repository`: Работа с базой данных
+- `internal/repository`: Подключение и работа с базой данных
 - `db/migrations`: SQL файлы для миграции базы данных.
 - `Dockerfile`: Инструкции для сборки Docker-образа.
 - `docker-compose.yml`: Конфигурация Docker Compose.
