@@ -11,12 +11,10 @@ import (
 func main() {
 	//create connection string and parse it
 	envFilePath := "configs/api.env"
-	dbCfg := config.NewConfigDB(envFilePath)
-	repo := repository.New(dbCfg)
-	appCfg := config.NewServer()
-	app := handlers.New(repo, appCfg) //заполнить поле, чтобы передавалось
+	cfg := config.NewConfigDB(envFilePath)
+	repo := repository.New(cfg)
+	app := handlers.New(repo, cfg)
 	// start database
-
 	err := app.Start(handlers.Routes(app))
 	if err != nil {
 		log.Fatal("start application failed %v", err)

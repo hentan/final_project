@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -15,7 +16,7 @@ import (
 type Application struct {
 	Domain     string
 	DB         repository.DatabaseRepo
-	ServerConf config.Server
+	ServerConf config.Config
 }
 
 type Handler interface {
@@ -35,14 +36,15 @@ type Handler interface {
 }
 
 func (app *Application) Start(h http.Handler) error {
-	err := http.ListenAndServe(app.ServerConf.Port, h)
+	err := http.ListenAndServe(app.ServerConf.AppPort, h)
 	if err != nil {
 		return err
 	}
+	log.Println("успешный старт на порту %s", app.ServerConf.AppPort)
 	return nil
 }
 
-func New(db repository.DatabaseRepo, cfg config.Server) Handler {
+func New(db repository.DatabaseRepo, cfg config.Config) Handler {
 	return &Application{
 		DB:         db,
 		ServerConf: cfg,
@@ -151,8 +153,6 @@ func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 		Error:   false,
 		Message: fmt.Sprintf("Книга c id %d успешно обновлена", ID),
 	}
-
-	fmt.Println(resp)
 
 	app.writeJSON(w, http.StatusOK, resp)
 

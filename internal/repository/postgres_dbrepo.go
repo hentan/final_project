@@ -19,9 +19,9 @@ type postgresDBRepo struct {
 	db *sql.DB
 }
 
-func New(cfg config.ConfigDB) DatabaseRepo {
+func New(cfg config.Config) DatabaseRepo {
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Name)
+		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
 
 	db, err := connectToDB(connStr)
 	if err != nil {
@@ -127,8 +127,6 @@ func (m *postgresDBRepo) InsertBook(book models.BookID) (int, error) {
 
 	var newID int
 
-	log.Println(book)
-
 	err := m.db.QueryRowContext(ctx, query,
 		book.Title,
 		book.AuthorID,
@@ -137,7 +135,6 @@ func (m *postgresDBRepo) InsertBook(book models.BookID) (int, error) {
 	).Scan(&newID)
 
 	if err != nil {
-		log.Println("Ошибка тут!!!!!")
 		return 0, err
 	}
 

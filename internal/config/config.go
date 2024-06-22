@@ -14,31 +14,31 @@ const envVarDbUser = "DB_USER"
 const envVarDbPassword = "DB_Password"
 const envVarDbName = "DB_NAME"
 
-// сделать одну структуру на 2 поля 1 - db, 2- server
-type ConfigDB struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	Name     string
+type Config struct {
+	DBHost     string
+	DBPort     string
+	DBUser     string
+	DBPassword string
+	DBName     string
+	AppPort    string
 }
 
-type Server struct {
-	Port string
-}
-
-func NewConfigDB(path string) ConfigDB {
+func NewConfigDB(path string) Config {
 	err := godotenv.Load(path)
 	if err != nil {
 		log.Println("Error loading .env file")
 	}
 
-	return ConfigDB{
-		Host:     getEnv(envVarDbHost, "db"),
-		Port:     getEnv(envVarDbPort, "5432"),
-		User:     getEnv(envVarDbUser, "postgres"),
-		Password: getEnv(envVarDbPassword, "postgres"),
-		Name:     getEnv(envVarDbName, "postgres"),
+	port := getEnv("APP_PORT", "8080")
+	port = fmt.Sprintf(":%s", port)
+
+	return Config{
+		DBHost:     getEnv(envVarDbHost, "db"),
+		DBPort:     getEnv(envVarDbPort, "5432"),
+		DBUser:     getEnv(envVarDbUser, "postgres"),
+		DBPassword: getEnv(envVarDbPassword, "postgres"),
+		DBName:     getEnv(envVarDbName, "postgres"),
+		AppPort:    port,
 	}
 }
 
@@ -47,12 +47,4 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
-}
-
-func NewServer() Server {
-	port := getEnv("APP_PORT", "8080")
-	port = fmt.Sprintf(":%s", port)
-	return Server{
-		Port: port,
-	}
 }
