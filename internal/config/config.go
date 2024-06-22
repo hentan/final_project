@@ -8,10 +8,13 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const envVarDbName = "DB_NAME" //создать константы на все
+const envVarDbHost = "DB_HOST"
+const envVarDbPort = "DB_PORT"
+const envVarDbUser = "DB_USER"
+const envVarDbPassword = "DB_Password"
+const envVarDbName = "DB_NAME"
 
 // сделать одну структуру на 2 поля 1 - db, 2- server
-// убрать db в названиях
 type ConfigDB struct {
 	Host     string
 	Port     string
@@ -31,11 +34,11 @@ func NewConfigDB(path string) ConfigDB {
 	}
 
 	return ConfigDB{
-		Host:     getEnv("DB_HOST", "db"), //вынести в константы
-		Port:     getEnv("DB_PORT", "5432"),
-		User:     getEnv("DB_USER", "postgres"),
-		Password: getEnv("DB_PASSWORD", "postgres"),
-		Name:     getEnv("DB_NAME", "postgres"),
+		Host:     getEnv(envVarDbHost, "db"),
+		Port:     getEnv(envVarDbPort, "5432"),
+		User:     getEnv(envVarDbUser, "postgres"),
+		Password: getEnv(envVarDbPassword, "postgres"),
+		Name:     getEnv(envVarDbName, "postgres"),
 	}
 }
 
