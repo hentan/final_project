@@ -82,11 +82,14 @@ func (app *Application) GetBook(w http.ResponseWriter, r *http.Request) {
 	bookID, err := strconv.Atoi(id)
 	if err != nil {
 		app.errorJSON(w, err)
+		return
 	}
 
 	book, err := app.DB.OneBook(bookID)
+
 	if err != nil {
-		app.errorJSON(w, err)
+		app.errorJSON(w, err, 404)
+		return
 	}
 
 	_ = app.writeJSON(w, http.StatusOK, book)
@@ -163,6 +166,7 @@ func (app *Application) DeleteBook(w http.ResponseWriter, r *http.Request) {
 	ID, err := strconv.Atoi(id)
 	if err != nil {
 		app.errorJSON(w, err)
+		return
 	}
 
 	_, err = app.DB.OneBook(ID)
@@ -205,11 +209,13 @@ func (app *Application) GetAuthor(w http.ResponseWriter, r *http.Request) {
 	authorID, err := strconv.Atoi(id)
 	if err != nil {
 		app.errorJSON(w, err)
+		return
 	}
 
 	author, err := app.DB.OneAuthor(authorID)
 	if err != nil {
-		app.errorJSON(w, err)
+		app.errorJSON(w, err, 404)
+		return
 	}
 
 	_ = app.writeJSON(w, http.StatusOK, author)
@@ -245,6 +251,7 @@ func (app *Application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 	ID, err := strconv.Atoi(id)
 	if err != nil {
 		app.errorJSON(w, err)
+		return
 	}
 
 	var payload models.Author
@@ -286,6 +293,7 @@ func (app *Application) DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 	ID, err := strconv.Atoi(id)
 	if err != nil {
 		app.errorJSON(w, err)
+		return
 	}
 
 	_, err = app.DB.OneAuthor(ID)
@@ -314,12 +322,14 @@ func (app *Application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Reque
 	ID_book, err := strconv.Atoi(id_book)
 	if err != nil {
 		app.errorJSON(w, err)
+		return
 	}
 
 	id_author := chi.URLParam(r, "id_author")
 	ID_author, err := strconv.Atoi(id_author)
 	if err != nil {
 		app.errorJSON(w, err)
+		return
 	}
 
 	var payload models.AuthorAndBook
