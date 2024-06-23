@@ -262,7 +262,7 @@ func (app *Application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	author.NameAuthor = payload.NameAuthor
-	author.SirnameAuthor = payload.SirnameAuthor
+	author.SurnameAuthor = payload.SurnameAuthor
 	author.Biography = payload.Biography
 	author.Birthday = payload.Birthday
 
@@ -343,7 +343,7 @@ func (app *Application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Reque
 	}
 
 	author.NameAuthor = payload.Author.NameAuthor
-	author.SirnameAuthor = payload.Author.SirnameAuthor
+	author.SurnameAuthor = payload.Author.SurnameAuthor
 	author.Biography = payload.Author.Biography
 	author.Birthday = payload.Author.Birthday
 	book.Title = payload.Book.Title

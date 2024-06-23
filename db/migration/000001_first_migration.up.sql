@@ -1,7 +1,7 @@
 create table authors(
 	ID serial primary key,
 	Name_author varchar(100),
-	Sirname_author varchar(100),
+	Surname_author varchar(100),
 	Biography varchar,
 	Birthday date
 );
@@ -18,7 +18,7 @@ alter table books
 add constraint fk_books_authors foreign key(Author_ID)
 references authors(ID);
 
-insert into authors(Name_author, Sirname_author, Biography, Birthday)
+insert into authors(Name_author, Surname_author, Biography, Birthday)
 values(
     'Leo',
     'Tolstoy',

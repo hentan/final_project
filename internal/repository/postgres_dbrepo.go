@@ -58,7 +58,7 @@ func (m *postgresDBRepo) AllBooks() ([]*models.Book, error) {
 	defer cancel()
 
 	query := `
-        select b.id, name_book, concat_ws(' ', name_author, sirname_author) as author, year_book, isbn
+        select b.id, name_book, concat_ws(' ', name_author, surname_author) as author, year_book, isbn
         from books b
         inner join authors a on b.author_id = a.id
         order by name_book
@@ -96,7 +96,7 @@ func (m *postgresDBRepo) OneBook(id int) (*models.Book, error) {
 	defer cancel()
 
 	query := `
-        select b.id, name_book, concat_ws(' ', name_author, sirname_author) as author, year_book, isbn
+        select b.id, name_book, concat_ws(' ', name_author, surname_author) as author, year_book, isbn
         from books b
         inner join authors a on b.author_id = a.id
         where b.id =$1
@@ -188,7 +188,7 @@ func (m *postgresDBRepo) AllAuthors() ([]*models.Author, error) {
 	defer cancel()
 
 	query := `
-        select id, name_author, sirname_author, biography, birthday
+        select id, name_author, surname_author, biography, birthday
 		from authors
         order by name_author
     `
@@ -206,7 +206,7 @@ func (m *postgresDBRepo) AllAuthors() ([]*models.Author, error) {
 		err := rows.Scan(
 			&author.ID,
 			&author.NameAuthor,
-			&author.SirnameAuthor,
+			&author.SurnameAuthor,
 			&author.Biography,
 			&author.Birthday,
 		)
@@ -225,7 +225,7 @@ func (m *postgresDBRepo) OneAuthor(id int) (*models.Author, error) {
 	defer cancel()
 
 	query := `
-		select id, name_author, sirname_author, biography, birthday
+		select id, name_author, surname_author, biography, birthday
 		from authors
         where id =$1
     `
@@ -234,7 +234,7 @@ func (m *postgresDBRepo) OneAuthor(id int) (*models.Author, error) {
 	err := row.Scan(
 		&author.ID,
 		&author.NameAuthor,
-		&author.SirnameAuthor,
+		&author.SurnameAuthor,
 		&author.Biography,
 		&author.Birthday,
 	)
@@ -249,7 +249,7 @@ func (m *postgresDBRepo) InsertAuthor(author models.Author) (int, error) {
 	defer cancel()
 
 	query := `
-        insert into authors(name_author, sirname_author, biography, birthday)
+        insert into authors(name_author, surname_author, biography, birthday)
 		values($1, $2, $3, $4) returning id
     `
 
@@ -262,7 +262,7 @@ func (m *postgresDBRepo) InsertAuthor(author models.Author) (int, error) {
 
 	err = m.db.QueryRowContext(ctx, query,
 		author.NameAuthor,
-		author.SirnameAuthor,
+		author.SurnameAuthor,
 		author.Biography,
 		t,
 	).Scan(&newID)
@@ -279,7 +279,7 @@ func (m *postgresDBRepo) UpdateAuthor(author models.Author) error {
 	defer cancel()
 
 	query := `
-        update authors set name_author = $1, sirname_author = $2, biography = $3, birthday = $4
+        update authors set name_author = $1, surname_author = $2, biography = $3, birthday = $4
 		where id = $5
     `
 
@@ -287,7 +287,7 @@ func (m *postgresDBRepo) UpdateAuthor(author models.Author) error {
 
 	_, err := m.db.ExecContext(ctx, query,
 		author.NameAuthor,
-		author.SirnameAuthor,
+		author.SurnameAuthor,
 		author.Biography,
 		author.Birthday,
 		author.ID,
@@ -326,13 +326,13 @@ func (m *postgresDBRepo) UpdateAuthorAndBook(author models.Author, book models.B
 	}
 
 	query := `
-        update authors set name_author = $1, sirname_author = $2, biography = $3, birthday = $4
+        update authors set name_author = $1, surname_author = $2, biography = $3, birthday = $4
 		where id = $5
     `
 
 	_, err = m.db.ExecContext(ctx, query,
 		author.NameAuthor,
-		author.SirnameAuthor,
+		author.SurnameAuthor,
 		author.Biography,
 		author.Birthday,
 		author.ID,

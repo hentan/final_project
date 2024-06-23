@@ -142,7 +142,7 @@
 ```json
 {
   "name_author": "Антон",
-  "sirname_author": "Чехов",
+  "surname_author": "Чехов",
   "biography": "Русский писатель, драматург и врач.",
   "birthday": "1860-01-29"
 }
@@ -199,7 +199,7 @@
 ```json
 {
   "name_author": "Антон",
-  "sirname_author": "Чехов",
+  "surname_author": "Чехов",
   "biography": "Русский писатель, драматург и врач.",
   "birthday": "1890-01-29"
 }
@@ -265,7 +265,7 @@
 {
   "author": {
     "name_author": "Антон",
-    "sirname_author": "Чехов",
+    "surname_author": "Чехов",
     "biography": "Русский писатель, драматург и врач.",
     "birthday": "1890-01-29"
   },
