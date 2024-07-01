@@ -8,11 +8,13 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const envVarDbHost = "DB_HOST"
-const envVarDbPort = "DB_PORT"
-const envVarDbUser = "DB_USER"
-const envVarDbPassword = "DB_Password"
-const envVarDbName = "DB_NAME"
+const (
+	envVarDbHost     = "DB_HOST"
+	envVarDbPort     = "DB_PORT"
+	envVarDbUser     = "DB_USER"
+	envVarDbPassword = "DB_Password"
+	envVarDbName     = "DB_NAME"
+)
 
 type Config struct {
 	DBHost     string

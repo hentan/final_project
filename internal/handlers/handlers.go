@@ -66,7 +66,6 @@ func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) AllBooks(w http.ResponseWriter, r *http.Request) {
-
 	books, err := app.DB.AllBooks()
 	if err != nil {
 		app.errorJSON(w, err)
@@ -120,7 +119,6 @@ func (app *Application) InsertBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
-
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
@@ -193,7 +191,6 @@ func (app *Application) DeleteBook(w http.ResponseWriter, r *http.Request) {
 // с этой строки и ниже действия с авторами
 
 func (app *Application) AllAuthors(w http.ResponseWriter, r *http.Request) {
-
 	books, err := app.DB.AllAuthors()
 	if err != nil {
 		app.errorJSON(w, err)
@@ -246,7 +243,6 @@ func (app *Application) InsertAuthor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
-
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
