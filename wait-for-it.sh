@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Хост и порт базы данных
+# Хост и порт базы данных, можно передать как аргументы или задать по умолчанию
 HOST="postgres"
 PORT="5432"
 
@@ -12,3 +12,4 @@ done
 
 echo "PostgreSQL is up - executing command"
 exec "$@"
+
