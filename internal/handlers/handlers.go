@@ -40,7 +40,7 @@ func (app *Application) Start(h http.Handler) error {
 	if err != nil {
 		return err
 	}
-	log.Println("успешный старт на порту %s", app.ServerConf.AppPort)
+	log.Printf("успешный старт на порту %s", app.ServerConf.AppPort)
 	return nil
 }
 
