@@ -1,11 +1,13 @@
 package handlers_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/hentan/final_project/internal/handlers"
 	"github.com/hentan/final_project/internal/handlers/testdata"
 	mocks "github.com/hentan/final_project/internal/mocks/repository"
@@ -63,6 +65,28 @@ func (s *appSuite) TestAllBooks() {
 	require.NoError(s.T(), err)
 
 	assert.Equal(s.T(), expectedBooks, actualBooks)
+}
+
+func (s *appSuite) TestGetBooks() {
+
+	expectedBooks := testdata.ReadBook(&s.Suite, "books/read_all_books_success.json")
+	book := *expectedBooks[0]
+
+	s.repo.On("OneBook", 2).Return(&book, nil).Once()
+	req, err := http.NewRequest("GET", "/book/2", nil)
+	require.NoError(s.T(), err)
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "2")
+
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	rr := httptest.NewRecorder()
+	s.application.GetBook(rr, req)
+	assert.Equal(s.T(), http.StatusOK, rr.Code)
+
+	expected := `{"id":2,"title":"the Idiot","author":"Fyodor Dostoevsky","year":1868,"isbn":"978-1533695840"}`
+	s.Require().JSONEq(expected, rr.Body.String())
 }
 
 func TestAppSuite(t *testing.T) {

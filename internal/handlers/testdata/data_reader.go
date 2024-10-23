@@ -20,8 +20,17 @@ type suite interface {
 func ReadBook(s suite, path string) []*models.Book {
 	data := ReadFile(s, path)
 	var books []models.Book
+
 	err := json.Unmarshal(data, &books)
-	s.Require().NoError(err)
+	if err != nil {
+		var singleBook models.Book
+		err = json.Unmarshal(data, &singleBook)
+		s.Require().NoError(err)
+
+		books = append(books, singleBook)
+	} else {
+		s.Require().NoError(err)
+	}
 
 	bookPtrs := make([]*models.Book, len(books))
 	for i := range books {
