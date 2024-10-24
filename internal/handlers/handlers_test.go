@@ -1,7 +1,9 @@
 package handlers_test
 
 import (
+	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -67,7 +69,7 @@ func (s *appSuite) TestAllBooks() {
 	assert.Equal(s.T(), expectedBooks, actualBooks)
 }
 
-func (s *appSuite) TestGetBooks() {
+func (s *appSuite) TestGetBook() {
 
 	expectedBooks := testdata.ReadBook(&s.Suite, "books/read_all_books_success.json")
 	book := *expectedBooks[0]
@@ -78,7 +80,6 @@ func (s *appSuite) TestGetBooks() {
 
 	routeCtx := chi.NewRouteContext()
 	routeCtx.URLParams.Add("id", "2")
-
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
 
 	rr := httptest.NewRecorder()
@@ -87,6 +88,59 @@ func (s *appSuite) TestGetBooks() {
 
 	expected := `{"id":2,"title":"the Idiot","author":"Fyodor Dostoevsky","year":1868,"isbn":"978-1533695840"}`
 	s.Require().JSONEq(expected, rr.Body.String())
+}
+
+func (s *appSuite) TestGetBookNotFound() {
+	bookID := 999
+	s.repo.On("OneBook", bookID).Return(nil, sql.ErrNoRows).Once()
+
+	req, err := http.NewRequest("GET", "/book/999", nil)
+	require.NoError(s.T(), err)
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "999")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	rr := httptest.NewRecorder()
+	s.application.GetBook(rr, req)
+	assert.Equal(s.T(), http.StatusNotFound, rr.Code)
+
+	expected := `{"error":true, "message":"sql: no rows in result set"}`
+	s.Require().JSONEq(expected, rr.Body.String())
+}
+
+func (s *appSuite) TestInsertBookSuccess() {
+	expectedBooks := testdata.ReadBook(&s.Suite, "books/insert_one_book_success.json")
+	book := expectedBooks[0]
+	reqBody, _ := json.Marshal(book)
+	req := httptest.NewRequest(http.MethodPost, "/books", bytes.NewBuffer(reqBody))
+
+	rr := httptest.NewRecorder()
+
+	s.repo.On("InsertBook", *book).Return(1, nil)
+	s.application.InsertBook(rr, req)
+	assert.Equal(s.T(), http.StatusCreated, rr.Code)
+
+	var resp handlers.JSONResponce
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	assert.NoError(s.T(), err)
+	assert.Equal(s.T(), false, resp.Error)
+	assert.Equal(s.T(), "Книга с id 1 успешно добавлена", resp.Message)
+}
+
+func (s *appSuite) TestInsertBookError() {
+	incJSON, _ := json.Marshal('{')
+	req := httptest.NewRequest(http.MethodPost, "/books", bytes.NewBuffer(incJSON))
+
+	rr := httptest.NewRecorder()
+	s.application.InsertBook(rr, req)
+	assert.Equal(s.T(), http.StatusBadRequest, rr.Code)
+
+	var resp handlers.JSONResponce
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	assert.NoError(s.T(), err)
+	assert.Equal(s.T(), true, resp.Error)
+	assert.Equal(s.T(), "json: cannot unmarshal number into Go value of type models.Book", resp.Message)
 }
 
 func TestAppSuite(t *testing.T) {

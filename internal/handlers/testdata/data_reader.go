@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"embed"
 	"encoding/json"
-	"fmt"
 
 	"github.com/hentan/final_project/internal/models"
 	"github.com/stretchr/testify/require"
@@ -40,7 +39,6 @@ func ReadBook(s suite, path string) []*models.Book {
 }
 
 func ReadFile(s suite, path string) []byte {
-	fmt.Println(path)
 	content, err := fs.ReadFile(path)
 	s.Require().NoError(err)
 	return bytes.TrimSpace(content)
