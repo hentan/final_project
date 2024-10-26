@@ -163,7 +163,7 @@ func (app *Application) DeleteBook(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
-		app.errorJSON(w, err)
+		app.errorJSON(w, err, 400)
 		return
 	}
 
@@ -175,7 +175,7 @@ func (app *Application) DeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	err = app.DB.DeleteBook(ID)
 	if err != nil {
-		app.errorJSON(w, err)
+		app.errorJSON(w, err, 500)
 		return
 	}
 

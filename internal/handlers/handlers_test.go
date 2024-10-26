@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -222,6 +223,73 @@ func (s *appSuite) TestUpdateBook_Error_Incorrect_JSON() {
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), true, resp.Error)
 	assert.Equal(s.T(), "json: cannot unmarshal number into Go value of type models.Book", resp.Message)
+}
+
+func (s *appSuite) TestDeleteBook_Success() {
+	expectedBooks := testdata.ReadBook(&s.Suite, "books/read_all_books_success.json")
+	book := *expectedBooks[0]
+
+	req := httptest.NewRequest(http.MethodDelete, "/book/2", nil)
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "2")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	s.repo.On("OneBook", 2).Return(&book, nil)
+	s.repo.On("DeleteBook", 2).Return(nil)
+
+	rr := httptest.NewRecorder()
+
+	s.application.DeleteBook(rr, req)
+	s.Equal(http.StatusOK, rr.Code, "Ожидался код ответа 200 OK")
+
+	var resp handlers.JSONResponce
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	s.NoError(err, "Не удалось разобрать JSON ответ")
+	s.False(resp.Error, "Ожидалось, что ошибка будет равна false")
+	s.Equal(fmt.Sprintf("Книга c id %d успешно удалена", 2), resp.Message)
+}
+
+func (s *appSuite) TestDeleteBook_Error_Not_Found() {
+
+	bookID := 999
+	req := httptest.NewRequest(http.MethodDelete, "/book/999", nil)
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "999")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	s.repo.On("OneBook", bookID).Return(nil, sql.ErrNoRows).Once()
+	rr := httptest.NewRecorder()
+	s.application.DeleteBook(rr, req)
+	assert.Equal(s.T(), http.StatusNotFound, rr.Code)
+
+	expected := `{"error":true, "message":"sql: no rows in result set"}`
+	s.Require().JSONEq(expected, rr.Body.String())
+}
+
+func (s *appSuite) TestDeleteBook_Server_Error() {
+	expectedBooks := testdata.ReadBook(&s.Suite, "books/read_all_books_success.json")
+	book := *expectedBooks[0]
+
+	req := httptest.NewRequest(http.MethodDelete, "/book/2", nil)
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "2")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	rr := httptest.NewRecorder()
+	s.repo.On("OneBook", 2).Return(&book, nil)
+	s.repo.On("DeleteBook", 2).Return(errors.New("ошибка при удалении"))
+
+	s.application.DeleteBook(rr, req)
+
+	s.Equal(http.StatusInternalServerError, rr.Code, "Ожидался код ответа 500 Internal Server Error")
+
+	var resp handlers.JSONResponce
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	s.NoError(err, "Не удалось разобрать JSON ответ")
+	s.True(resp.Error, "Ожидалось, что ошибка будет равна true")
 }
 
 func TestAppSuite(t *testing.T) {
