@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -134,6 +135,86 @@ func (s *appSuite) TestInsertBookError() {
 
 	rr := httptest.NewRecorder()
 	s.application.InsertBook(rr, req)
+	assert.Equal(s.T(), http.StatusBadRequest, rr.Code)
+
+	var resp handlers.JSONResponce
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	assert.NoError(s.T(), err)
+	assert.Equal(s.T(), true, resp.Error)
+	assert.Equal(s.T(), "json: cannot unmarshal number into Go value of type models.Book", resp.Message)
+}
+
+func (s *appSuite) TestUpdateBook_Success() {
+	existingBooks := testdata.ReadBook(&s.Suite, "books/update_book_success.json")
+	book := existingBooks[0]
+
+	updatedBook := models.Book{
+		Title:    "Updated Book",
+		AuthorID: book.AuthorID,
+		Year:     book.Year,
+		ISBN:     "9876543210",
+	}
+
+	reqBody, _ := json.Marshal(updatedBook)
+	req := httptest.NewRequest(http.MethodPut, "/book/2", bytes.NewBuffer(reqBody))
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "2")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	rr := httptest.NewRecorder()
+
+	s.repo.On("OneBook", 2).Return(book, nil)
+	s.repo.On("UpdateBook", updatedBook).Return(nil)
+
+	s.application.UpdateBook(rr, req)
+
+	s.Equal(http.StatusOK, rr.Code, "Ожидался код ответа 200 OK")
+
+	var resp handlers.JSONResponce
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	s.NoError(err, "Не удалось разобрать JSON ответ")
+	s.False(resp.Error, "Ожидалось, что ошибка будет равна false")
+	s.Equal(fmt.Sprintf("Книга c id %d успешно обновлена", 2), resp.Message)
+}
+
+func (s *appSuite) TestUpdateBook_Error_Not_Found() {
+	existingBooks := testdata.ReadBook(&s.Suite, "books/update_book_success.json")
+	book := existingBooks[0]
+
+	updatedBook := models.Book{
+		Title:    "Updated Book",
+		AuthorID: book.AuthorID,
+		Year:     book.Year,
+		ISBN:     "9876543210",
+	}
+	reqBody, _ := json.Marshal(updatedBook)
+	bookID := 999
+
+	req := httptest.NewRequest(http.MethodPut, "/book/999", bytes.NewBuffer(reqBody))
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "999")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	s.repo.On("OneBook", bookID).Return(nil, sql.ErrNoRows).Once()
+	rr := httptest.NewRecorder()
+	s.application.UpdateBook(rr, req)
+	assert.Equal(s.T(), http.StatusNotFound, rr.Code)
+
+	expected := `{"error":true, "message":"sql: no rows in result set"}`
+	s.Require().JSONEq(expected, rr.Body.String())
+}
+
+func (s *appSuite) TestUpdateBook_Error_Incorrect_JSON() {
+	incJSON, _ := json.Marshal('{')
+	req := httptest.NewRequest(http.MethodPost, "/book/2", bytes.NewBuffer(incJSON))
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "2")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	rr := httptest.NewRecorder()
+	s.application.UpdateBook(rr, req)
 	assert.Equal(s.T(), http.StatusBadRequest, rr.Code)
 
 	var resp handlers.JSONResponce
