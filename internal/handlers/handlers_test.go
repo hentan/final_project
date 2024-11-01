@@ -292,6 +292,246 @@ func (s *appSuite) TestDeleteBook_Server_Error() {
 	s.True(resp.Error, "Ожидалось, что ошибка будет равна true")
 }
 
+func (s *appSuite) TestAllAuthors() {
+
+	expectedAuthors := testdata.ReadAuthor(&s.Suite, "author/read_all_author_success.json")
+	s.repo.On("AllAuthors").Return(expectedAuthors, nil).Once()
+	req, err := http.NewRequest("GET", "/Authors", nil)
+	require.NoError(s.T(), err)
+
+	rr := httptest.NewRecorder()
+	s.application.AllAuthors(rr, req)
+	assert.Equal(s.T(), http.StatusOK, rr.Code)
+
+	var actualAuthors []*models.Author
+	err = json.Unmarshal(rr.Body.Bytes(), &actualAuthors)
+	require.NoError(s.T(), err)
+
+	assert.Equal(s.T(), expectedAuthors, actualAuthors)
+}
+
+func (s *appSuite) TestGetAuthor() {
+
+	expectedAuthors := testdata.ReadAuthor(&s.Suite, "author/read_all_author_success.json")
+	Author := *expectedAuthors[0]
+
+	s.repo.On("OneAuthor", 2).Return(&Author, nil).Once()
+	req, err := http.NewRequest("GET", "/Author/2", nil)
+	require.NoError(s.T(), err)
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "2")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	rr := httptest.NewRecorder()
+	s.application.GetAuthor(rr, req)
+	assert.Equal(s.T(), http.StatusOK, rr.Code)
+
+	expected := `{"id":2,"name_author":"Fyodor","surname_author":"Dostoevsky","biography":"Fyodor Mikhailovich Dostoevsky[a] (UK: /ˌdɒstɔɪˈɛfski/,[1] US: /ˌdɒstəˈjɛfski, ˌdʌs-/;[2] Russian: Фёдор Михайлович Достоевский[b], romanized: Fyodor Mikhaylovich Dostoyevskiy, IPA: [ˈfʲɵdər mʲɪˈxajləvʲɪdʑ dəstɐˈjefskʲɪj] ⓘ; 11 November 1821 – 9 February 1881[3][c]), sometimes transliterated as Dostoyevsky, was a Russian novelist, short story writer, essayist and journalist. Numerous literary critics regard him as one of the greatest novelists in all of world literature, as many of his works are considered highly influential masterpieces","birthday":"1821-11-11T00:00:00Z"}`
+	s.Require().JSONEq(expected, rr.Body.String())
+}
+
+func (s *appSuite) TestGetAuthorNotFound() {
+	AuthorID := 999
+	s.repo.On("OneAuthor", AuthorID).Return(nil, sql.ErrNoRows).Once()
+
+	req, err := http.NewRequest("GET", "/Author/999", nil)
+	require.NoError(s.T(), err)
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "999")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	rr := httptest.NewRecorder()
+	s.application.GetAuthor(rr, req)
+	assert.Equal(s.T(), http.StatusNotFound, rr.Code)
+
+	expected := `{"error":true, "message":"sql: no rows in result set"}`
+	s.Require().JSONEq(expected, rr.Body.String())
+}
+
+func (s *appSuite) TestInsertAuthorSuccess() {
+	expectedAuthors := testdata.ReadAuthor(&s.Suite, "author/insert_one_author_success.json")
+	Author := expectedAuthors[0]
+	reqBody, _ := json.Marshal(Author)
+	req := httptest.NewRequest(http.MethodPost, "/Authors", bytes.NewBuffer(reqBody))
+
+	rr := httptest.NewRecorder()
+
+	s.repo.On("InsertAuthor", *Author).Return(1, nil)
+	s.application.InsertAuthor(rr, req)
+	assert.Equal(s.T(), http.StatusCreated, rr.Code)
+
+	var resp handlers.JSONResponce
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	assert.NoError(s.T(), err)
+	assert.Equal(s.T(), false, resp.Error)
+	assert.Equal(s.T(), "Автор с id 1 успешно добавлен", resp.Message)
+}
+
+func (s *appSuite) TestInsertAuthorError() {
+	incJSON, _ := json.Marshal('{')
+	req := httptest.NewRequest(http.MethodPost, "/Authors", bytes.NewBuffer(incJSON))
+
+	rr := httptest.NewRecorder()
+	s.application.InsertAuthor(rr, req)
+	assert.Equal(s.T(), http.StatusBadRequest, rr.Code)
+
+	var resp handlers.JSONResponce
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	assert.NoError(s.T(), err)
+	assert.Equal(s.T(), true, resp.Error)
+	assert.Equal(s.T(), "json: cannot unmarshal number into Go value of type models.Author", resp.Message)
+}
+
+func (s *appSuite) TestUpdateAuthor_Success() {
+	existingAuthors := testdata.ReadAuthor(&s.Suite, "author/update_author_success.json")
+	Author := existingAuthors[0]
+
+	updatedAuthor := models.Author{
+		NameAuthor:    "Антон",
+		SurnameAuthor: "Чехов",
+		Biography:     "Русский писатель, драматург и врач.",
+		Birthday:      "1860-01-29",
+	}
+
+	reqBody, _ := json.Marshal(updatedAuthor)
+	req := httptest.NewRequest(http.MethodPut, "/Author/2", bytes.NewBuffer(reqBody))
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "2")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	rr := httptest.NewRecorder()
+
+	s.repo.On("OneAuthor", 2).Return(Author, nil)
+	s.repo.On("UpdateAuthor", updatedAuthor).Return(nil)
+
+	s.application.UpdateAuthor(rr, req)
+
+	s.Equal(http.StatusOK, rr.Code, "Ожидался код ответа 200 OK")
+
+	var resp handlers.JSONResponce
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	s.NoError(err, "Не удалось разобрать JSON ответ")
+	s.False(resp.Error, "Ожидалось, что ошибка будет равна false")
+	s.Equal(fmt.Sprintf("Автор с id %d успешно обновлен", 2), resp.Message)
+}
+
+func (s *appSuite) TestUpdateAuthor_Error_Not_Found() {
+	existingAuthors := testdata.ReadAuthor(&s.Suite, "author/update_author_success.json")
+	Author := existingAuthors[0]
+
+	updatedAuthor := models.Author{
+		NameAuthor:    "Антон",
+		SurnameAuthor: "Чехов",
+		Biography:     "Русский писатель, драматург и врач.",
+		Birthday:      "1860-01-29",
+		ID:            Author.ID,
+	}
+	reqBody, _ := json.Marshal(updatedAuthor)
+	AuthorID := 999
+
+	req := httptest.NewRequest(http.MethodPut, "/Author/999", bytes.NewBuffer(reqBody))
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "999")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	s.repo.On("OneAuthor", AuthorID).Return(nil, sql.ErrNoRows).Once()
+	rr := httptest.NewRecorder()
+	s.application.UpdateAuthor(rr, req)
+	assert.Equal(s.T(), http.StatusNotFound, rr.Code)
+
+	expected := `{"error":true, "message":"sql: no rows in result set"}`
+	s.Require().JSONEq(expected, rr.Body.String())
+}
+
+func (s *appSuite) TestUpdateAuthor_Error_Incorrect_JSON() {
+	incJSON, _ := json.Marshal('{')
+	req := httptest.NewRequest(http.MethodPost, "/Author/2", bytes.NewBuffer(incJSON))
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "2")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	rr := httptest.NewRecorder()
+	s.application.UpdateAuthor(rr, req)
+	assert.Equal(s.T(), http.StatusBadRequest, rr.Code)
+
+	var resp handlers.JSONResponce
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	assert.NoError(s.T(), err)
+	assert.Equal(s.T(), true, resp.Error)
+	assert.Equal(s.T(), "json: cannot unmarshal number into Go value of type models.Author", resp.Message)
+}
+
+func (s *appSuite) TestDeleteAuthor_Success() {
+	expectedAuthors := testdata.ReadAuthor(&s.Suite, "author/read_all_author_success.json")
+	Author := *expectedAuthors[0]
+
+	req := httptest.NewRequest(http.MethodDelete, "/Author/2", nil)
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "2")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	s.repo.On("OneAuthor", 2).Return(&Author, nil)
+	s.repo.On("DeleteAuthor", 2).Return(nil)
+
+	rr := httptest.NewRecorder()
+
+	s.application.DeleteAuthor(rr, req)
+	s.Equal(http.StatusOK, rr.Code, "Ожидался код ответа 200 OK")
+
+	var resp handlers.JSONResponce
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	s.NoError(err, "Не удалось разобрать JSON ответ")
+	s.False(resp.Error, "Ожидалось, что ошибка будет равна false")
+	s.Equal(fmt.Sprintf("Автор с id %d успешно удален", 2), resp.Message)
+}
+
+func (s *appSuite) TestDeleteAuthor_Error_Not_Found() {
+
+	AuthorID := 999
+	req := httptest.NewRequest(http.MethodDelete, "/Author/999", nil)
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "999")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	s.repo.On("OneAuthor", AuthorID).Return(nil, sql.ErrNoRows).Once()
+	rr := httptest.NewRecorder()
+	s.application.DeleteAuthor(rr, req)
+	assert.Equal(s.T(), http.StatusNotFound, rr.Code)
+
+	expected := `{"error":true, "message":"sql: no rows in result set"}`
+	s.Require().JSONEq(expected, rr.Body.String())
+}
+
+func (s *appSuite) TestDeleteAuthor_Server_Error() {
+	expectedAuthors := testdata.ReadAuthor(&s.Suite, "author/read_all_author_success.json")
+	Author := *expectedAuthors[0]
+
+	req := httptest.NewRequest(http.MethodDelete, "/Author/2", nil)
+
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("id", "2")
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	rr := httptest.NewRecorder()
+	s.repo.On("OneAuthor", 2).Return(&Author, nil)
+	s.repo.On("DeleteAuthor", 2).Return(errors.New("ошибка при удалении"))
+
+	s.application.DeleteAuthor(rr, req)
+
+	s.Equal(http.StatusInternalServerError, rr.Code, "Ожидался код ответа 500 Internal Server Error")
+
+	var resp handlers.JSONResponce
+	err := json.Unmarshal(rr.Body.Bytes(), &resp)
+	s.NoError(err, "Не удалось разобрать JSON ответ")
+	s.True(resp.Error, "Ожидалось, что ошибка будет равна true")
+}
+
 func TestAppSuite(t *testing.T) {
 	suite.Run(t, new(appSuite))
 }
