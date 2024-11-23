@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/hentan/final_project/internal/logger"
 	_ "github.com/hentan/final_project/internal/repository"
 )
 
@@ -59,6 +60,7 @@ func (app *Application) readJSON(w http.ResponseWriter, r *http.Request, data in
 
 func (app *Application) errorJSON(w http.ResponseWriter, err error, status ...int) error {
 	statusCode := http.StatusBadRequest
+	newLogger := logger.GetLogger()
 
 	if len(status) > 0 {
 		statusCode = status[0]
@@ -67,6 +69,7 @@ func (app *Application) errorJSON(w http.ResponseWriter, err error, status ...in
 	var payload JSONResponce
 	payload.Error = true
 	payload.Message = err.Error()
+	newLogger.Error(payload.Message)
 
 	return app.writeJSON(w, statusCode, payload)
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"time"
 
 	_ "github.com/jackc/pgconn"
@@ -12,6 +11,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 
 	"github.com/hentan/final_project/internal/config"
+	"github.com/hentan/final_project/internal/logger"
 	"github.com/hentan/final_project/internal/models"
 )
 
@@ -24,8 +24,12 @@ func New(cfg config.Config) DatabaseRepo {
 		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName)
 
 	db, err := connectToDB(connStr)
+
 	if err != nil {
-		log.Fatal("Couldn't connect to DB: %v", err)
+		newLogger := logger.GetLogger()
+		msg := fmt.Sprintf("Couldn't connect to DB: %v", err)
+		newLogger.Error(msg)
+		return nil
 	}
 
 	return &postgresDBRepo{
@@ -34,6 +38,7 @@ func New(cfg config.Config) DatabaseRepo {
 }
 
 func connectToDB(dsn string) (*sql.DB, error) {
+	newLogger := logger.GetLogger()
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, err
@@ -43,7 +48,7 @@ func connectToDB(dsn string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println("успешное подключение к БД!")
+	newLogger.Info("успешное подключение к БД!")
 	return db, nil
 }
 

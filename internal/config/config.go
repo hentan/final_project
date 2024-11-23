@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 
+	"github.com/hentan/final_project/internal/logger"
 	"github.com/joho/godotenv"
 )
 
@@ -26,9 +26,10 @@ type Config struct {
 }
 
 func NewConfigDB(path string) Config {
+	newLogger := logger.GetLogger()
 	err := godotenv.Load(path)
 	if err != nil {
-		log.Println("Error loading .env file")
+		newLogger.Error("Error loading .env file")
 	}
 
 	port := getEnv("APP_PORT", "8080")

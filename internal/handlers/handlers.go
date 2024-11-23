@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/hentan/final_project/internal/config"
+	"github.com/hentan/final_project/internal/logger"
 	"github.com/hentan/final_project/internal/models"
 	"github.com/hentan/final_project/internal/repository"
 )
@@ -36,11 +36,13 @@ type Handler interface {
 }
 
 func (app *Application) Start(h http.Handler) error {
+	newLogger := logger.GetLogger()
 	err := http.ListenAndServe(app.ServerConf.AppPort, h)
 	if err != nil {
 		return err
 	}
-	log.Printf("успешный старт на порту %s", app.ServerConf.AppPort)
+	msg := fmt.Sprintf("успешный старт на порту %s", app.ServerConf.AppPort)
+	newLogger.Info(msg)
 	return nil
 }
 
@@ -68,7 +70,8 @@ func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
 func (app *Application) AllBooks(w http.ResponseWriter, r *http.Request) {
 	books, err := app.DB.AllBooks()
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go AllBooks error can't read from DB, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
@@ -80,14 +83,16 @@ func (app *Application) GetBook(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	bookID, err := strconv.Atoi(id)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go GetBook error ID must be INT, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
 	book, err := app.DB.OneBook(bookID)
 
 	if err != nil {
-		app.errorJSON(w, err, 404)
+		wrapError := fmt.Errorf("handlers/handlers.go GetBook error can't find book!, %w", err)
+		app.errorJSON(w, wrapError, 404)
 		return
 	}
 
@@ -99,13 +104,15 @@ func (app *Application) InsertBook(w http.ResponseWriter, r *http.Request) {
 
 	err := app.readJSON(w, r, &bookWithID)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go InsertBook error can't parse JSON!, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
 	newID, err := app.DB.InsertBook(bookWithID)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go InsertBook error can't insert book in database!, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
@@ -122,20 +129,24 @@ func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateBook error ID must be INT!, %w", err)
+		app.errorJSON(w, wrapError)
+		return
 	}
 
 	var payload models.Book
 
 	err = app.readJSON(w, r, &payload)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateBook error can't parse JSON!, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
 	book, err := app.DB.OneBook(ID)
 	if err != nil {
-		app.errorJSON(w, err, 404)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateBook error can't find book!, %w", err)
+		app.errorJSON(w, wrapError, 404)
 		return
 	}
 
@@ -146,7 +157,8 @@ func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	err = app.DB.UpdateBook(*book)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateBook error problems with update book!, %w", err)
+		app.errorJSON(w, wrapError, 500)
 		return
 	}
 
@@ -163,19 +175,22 @@ func (app *Application) DeleteBook(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
-		app.errorJSON(w, err, 400)
+		wrapError := fmt.Errorf("handlers/handlers.go DeleteBook ID must be INT!, %w", err)
+		app.errorJSON(w, wrapError, 400)
 		return
 	}
 
 	_, err = app.DB.OneBook(ID)
 	if err != nil {
-		app.errorJSON(w, err, 404)
+		wrapError := fmt.Errorf("handlers/handlers.go DeleteBook error can't find book!, %w", err)
+		app.errorJSON(w, wrapError, 404)
 		return
 	}
 
 	err = app.DB.DeleteBook(ID)
 	if err != nil {
-		app.errorJSON(w, err, 500)
+		wrapError := fmt.Errorf("handlers/handlers.go DeleteBook error problems with delete from database!, %w", err)
+		app.errorJSON(w, wrapError, 500)
 		return
 	}
 
@@ -193,7 +208,8 @@ func (app *Application) DeleteBook(w http.ResponseWriter, r *http.Request) {
 func (app *Application) AllAuthors(w http.ResponseWriter, r *http.Request) {
 	books, err := app.DB.AllAuthors()
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go AllAuthors error reading authors from DB, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
@@ -205,13 +221,15 @@ func (app *Application) GetAuthor(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	authorID, err := strconv.Atoi(id)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go GetAuthor error ID must be INT!, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
 	author, err := app.DB.OneAuthor(authorID)
 	if err != nil {
-		app.errorJSON(w, err, 404)
+		wrapError := fmt.Errorf("handlers/handlers.go GetAuthor error can't find author!, %w", err)
+		app.errorJSON(w, wrapError, 404)
 		return
 	}
 
@@ -223,13 +241,15 @@ func (app *Application) InsertAuthor(w http.ResponseWriter, r *http.Request) {
 
 	err := app.readJSON(w, r, &author)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go InsertAuthor error can't parse JSON!, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
 	newID, err := app.DB.InsertAuthor(author)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go InsertAuthor error can't insert author in database!, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
@@ -246,7 +266,8 @@ func (app *Application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateAuthor error ID must be INT!, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
@@ -254,13 +275,15 @@ func (app *Application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 
 	err = app.readJSON(w, r, &payload)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateAuthor error can't parse JSON!, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
 	author, err := app.DB.OneAuthor(ID)
 	if err != nil {
-		app.errorJSON(w, err, 404)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateAuthor error can't find author!, %w", err)
+		app.errorJSON(w, wrapError, 404)
 		return
 	}
 
@@ -271,7 +294,8 @@ func (app *Application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 
 	err = app.DB.UpdateAuthor(*author)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateAuthor error problems with update author!, %w", err)
+		app.errorJSON(w, wrapError, 500)
 		return
 	}
 
@@ -288,19 +312,22 @@ func (app *Application) DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
-		app.errorJSON(w, err, 400)
+		wrapError := fmt.Errorf("handlers/handlers.go DeleteAuthor ID must be INT!, %w", err)
+		app.errorJSON(w, wrapError, 400)
 		return
 	}
 
 	_, err = app.DB.OneAuthor(ID)
 	if err != nil {
-		app.errorJSON(w, err, 404)
+		wrapError := fmt.Errorf("handlers/handlers.go DeleteAuthor error can't find author!, %w", err)
+		app.errorJSON(w, wrapError, 404)
 		return
 	}
 
 	err = app.DB.DeleteAuthor(ID)
 	if err != nil {
-		app.errorJSON(w, err, 500)
+		wrapError := fmt.Errorf("handlers/handlers.go DeleteAuthor error problems with delete from database!, %w", err)
+		app.errorJSON(w, wrapError, 500)
 		return
 	}
 
@@ -317,14 +344,16 @@ func (app *Application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Reque
 	id_book := chi.URLParam(r, "id_book")
 	ID_book, err := strconv.Atoi(id_book)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateAuthorAndBook error ID must be INT!, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
 	id_author := chi.URLParam(r, "id_author")
 	ID_author, err := strconv.Atoi(id_author)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateAuthorAndBook error ID must be INT!, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
@@ -332,19 +361,22 @@ func (app *Application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Reque
 
 	err = app.readJSON(w, r, &payload)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateAuthorAndBook error can't parse JSON!, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
 	author, err := app.DB.OneAuthor(ID_author)
 	if err != nil {
-		app.errorJSON(w, err, 404)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateAuthorAndBook error can't find author!, %w", err)
+		app.errorJSON(w, wrapError, 404)
 		return
 	}
 
 	book, err := app.DB.OneBook(ID_book)
 	if err != nil {
-		app.errorJSON(w, err, 404)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateAuthorAndBook error can't find book!, %w", err)
+		app.errorJSON(w, wrapError, 404)
 		return
 	}
 
@@ -359,7 +391,8 @@ func (app *Application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Reque
 
 	err = app.DB.UpdateAuthorAndBook(*author, *book)
 	if err != nil {
-		app.errorJSON(w, err)
+		wrapError := fmt.Errorf("handlers/handlers.go UpdateAuthorAndBook error problems with update author or book!, %w", err)
+		app.errorJSON(w, wrapError, 500)
 		return
 	}
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/hentan/final_project/internal/config"
 	"github.com/hentan/final_project/internal/handlers"
+	"github.com/hentan/final_project/internal/logger"
 	"github.com/hentan/final_project/internal/repository"
 )
 
@@ -12,11 +13,23 @@ func main() {
 	//create connection string and parse it
 	envFilePath := "configs/api.env"
 	cfg := config.NewConfigDB(envFilePath)
-	repo := repository.New(cfg)
-	app := handlers.New(repo, cfg)
-	// start database
-	err := app.Start(handlers.Routes(app))
+	configLogger, _ := logger.NewConfigWithFormat("json")
+	err := logger.InitGlobalLogger(configLogger)
 	if err != nil {
-		log.Fatal("start application failed %v", err)
+		log.Fatal("Не удалось инициализировать глобальный логгер:", err)
+	}
+	newLogger := logger.GetLogger()
+	repo := repository.New(cfg)
+	if repo == nil {
+		newLogger.Error("не удалось подключиться к базе данных!")
+		return
+	}
+	app := handlers.New(repo, cfg)
+
+	// start database
+	err = app.Start(handlers.Routes(app))
+	if err != nil {
+		newLogger.Error("не удалось запустить приложение")
+		return
 	}
 }
