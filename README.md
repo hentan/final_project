@@ -7,8 +7,11 @@
 - `cmd/main.go`: Главный файл приложения.
 - `interal/config`: чтение файла конфигурации.
 - `interal/handlers/handlers.go`: обработчики HTTP-запросов.
+- `interal/handlers/handlers_test.go`: юнит-тесты.
 - `interal/handlers/routes.go`: маршрутизация.
 - `interal/handlers/json_handlers`: вспомогательные функции для обработки запроса/ответа/возвращения ошибок
+- `interal/logger/logger.go`: логгер
+- `interal/mocks`: моки
 - `internal/models`: Модели для работы с json
 - `internal/repository`: Подключение и работа с базой данных
 - `db/migrations`: SQL файлы для миграции базы данных.
