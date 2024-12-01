@@ -5,6 +5,7 @@ import (
 
 	"github.com/hentan/final_project/internal/config"
 	"github.com/hentan/final_project/internal/handlers"
+	"github.com/hentan/final_project/internal/kafka"
 	"github.com/hentan/final_project/internal/logger"
 	"github.com/hentan/final_project/internal/repository"
 )
@@ -19,6 +20,7 @@ func main() {
 		log.Fatal("Не удалось инициализировать глобальный логгер:", err)
 	}
 	newLogger := logger.GetLogger()
+	kafkaProducer, err := kafka.NewKafkaProducer(cfg.)
 	repo := repository.New(cfg)
 	if repo == nil {
 		newLogger.Error("не удалось подключиться к базе данных!")

@@ -8,15 +8,17 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/hentan/final_project/internal/config"
+	"github.com/hentan/final_project/internal/kafka"
 	"github.com/hentan/final_project/internal/logger"
 	"github.com/hentan/final_project/internal/models"
 	"github.com/hentan/final_project/internal/repository"
 )
 
 type Application struct {
-	Domain     string
-	DB         repository.DatabaseRepo
-	ServerConf config.Config
+	Domain      string
+	DB          repository.DatabaseRepo
+	ServerConf  config.Config
+	KafkaClient *kafka.KafkaProducer
 }
 
 type Handler interface {
@@ -46,10 +48,11 @@ func (app *Application) Start(h http.Handler) error {
 	return nil
 }
 
-func New(db repository.DatabaseRepo, cfg config.Config) Handler {
+func New(db repository.DatabaseRepo, cfg config.Config, kafkaProducer *kafka.KafkaProducer) Handler {
 	return &Application{
-		DB:         db,
-		ServerConf: cfg,
+		DB:          db,
+		ServerConf:  cfg,
+		KafkaClient: kafkaProducer,
 	}
 }
 

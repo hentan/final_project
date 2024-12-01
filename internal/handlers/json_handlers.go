@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -70,6 +71,12 @@ func (app *Application) errorJSON(w http.ResponseWriter, err error, status ...in
 	payload.Error = true
 	payload.Message = err.Error()
 	newLogger.Error(payload.Message)
-
+	sErr := fmt.Sprint(err)
+	er := app.KafkaClient.SendMessage(sErr)
+	if er != nil {
+		sEr := fmt.Sprint(er)
+		newLogger.Error(sEr)
+		return err
+	}
 	return app.writeJSON(w, statusCode, payload)
 }
