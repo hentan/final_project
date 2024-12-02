@@ -20,13 +20,18 @@ func main() {
 		log.Fatal("Не удалось инициализировать глобальный логгер:", err)
 	}
 	newLogger := logger.GetLogger()
-	kafkaProducer, err := kafka.NewKafkaProducer(cfg.)
+	kafkaProducer, err := kafka.NewKafkaProducer(cfg.Kafka.Brokers, cfg.Kafka.Topic)
+	if err != nil {
+		newLogger.Error("не удалось создать Kafka producer")
+		return
+	}
+
 	repo := repository.New(cfg)
 	if repo == nil {
 		newLogger.Error("не удалось подключиться к базе данных!")
 		return
 	}
-	app := handlers.New(repo, cfg)
+	app := handlers.New(repo, cfg, kafkaProducer)
 
 	// start database
 	err = app.Start(handlers.Routes(app))

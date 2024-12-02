@@ -9,12 +9,18 @@ import (
 )
 
 const (
-	envVarDbHost     = "DB_HOST"
-	envVarDbPort     = "DB_PORT"
-	envVarDbUser     = "DB_USER"
-	envVarDbPassword = "DB_Password"
-	envVarDbName     = "DB_NAME"
+	envVarDbHost      = "DB_HOST"
+	envVarDbPort      = "DB_PORT"
+	envVarDbUser      = "DB_USER"
+	envVarDbPassword  = "DB_Password"
+	envVarDbName      = "DB_NAME"
+	envVarKafkaBroker = "KAFKA_BROKER"
 )
+
+type Kafka struct {
+	Brokers []string
+	Topic   string
+}
 
 type Config struct {
 	DBHost     string
@@ -23,6 +29,7 @@ type Config struct {
 	DBPassword string
 	DBName     string
 	AppPort    string
+	Kafka      Kafka
 }
 
 func NewConfigDB(path string) Config {
@@ -34,6 +41,7 @@ func NewConfigDB(path string) Config {
 
 	port := getEnv("APP_PORT", "8080")
 	port = fmt.Sprintf(":%s", port)
+	kafkaBroker := getEnv(envVarKafkaBroker, "broker:29092")
 
 	return Config{
 		DBHost:     getEnv(envVarDbHost, "db"),
@@ -42,6 +50,10 @@ func NewConfigDB(path string) Config {
 		DBPassword: getEnv(envVarDbPassword, "postgres"),
 		DBName:     getEnv(envVarDbName, "postgres"),
 		AppPort:    port,
+		Kafka: Kafka{
+			Brokers: []string{kafkaBroker},
+			Topic:   "errors_from_handlers",
+		},
 	}
 }
 

@@ -72,11 +72,13 @@ func (app *Application) errorJSON(w http.ResponseWriter, err error, status ...in
 	payload.Message = err.Error()
 	newLogger.Error(payload.Message)
 	sErr := fmt.Sprint(err)
+	newLogger.Info("строка 75")
 	er := app.KafkaClient.SendMessage(sErr)
 	if er != nil {
 		sEr := fmt.Sprint(er)
 		newLogger.Error(sEr)
 		return err
 	}
+	newLogger.Info("строка 82")
 	return app.writeJSON(w, statusCode, payload)
 }

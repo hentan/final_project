@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/hentan/final_project/internal/handlers"
 	"github.com/hentan/final_project/internal/handlers/testdata"
+	mocksKafka "github.com/hentan/final_project/internal/mocks/kafka"
 	mocks "github.com/hentan/final_project/internal/mocks/repository"
 	"github.com/hentan/final_project/internal/models"
 	"github.com/stretchr/testify/assert"
@@ -25,12 +26,17 @@ type appSuite struct {
 	suite.Suite
 	application *handlers.Application
 	repo        *mocks.DatabaseRepo
+	kafka       *mocksKafka.KafkaProducer
 }
 
 func (s *appSuite) SetupTest() {
 	// Инициализация моков и приложения перед каждым тестом
 	s.repo = new(mocks.DatabaseRepo)
-	s.application = &handlers.Application{DB: s.repo}
+	s.kafka = new(mocksKafka.KafkaProducer)
+	s.application = &handlers.Application{
+		DB:          s.repo,
+		KafkaClient: s.kafka,
+	}
 }
 
 func TestHome(t *testing.T) {

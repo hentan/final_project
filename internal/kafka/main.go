@@ -7,31 +7,37 @@ import (
 	"github.com/hentan/final_project/internal/logger"
 )
 
-type KafkaProducer struct {
+type KafkaProducer interface {
+	SendMessage(message string) error
+	Close()
+}
+
+type KafkaProducerImpl struct {
 	producer sarama.SyncProducer
 	topic    string
 }
 
-func NewKafkaProducer(brokers []string, topic string) (*KafkaProducer, error) {
+func NewKafkaProducer(brokers []string, topic string) (*KafkaProducerImpl, error) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Version = sarama.V2_8_0_0
 	log := logger.GetLogger()
 
 	producer, err := sarama.NewSyncProducer(brokers, config)
 
 	if err != nil {
-		log.Info("Ошибка создания Kafka Producer", "брокеры:", brokers, "топик:", topic)
+		log.Info("Ошибка создания Kafka Producer", "брокеры:", brokers, "конфиг:", config, "ошибка: ", err)
 		return nil, err
 	}
 
-	return &KafkaProducer{
+	return &KafkaProducerImpl{
 		producer: producer,
 		topic:    topic,
 	}, nil
 }
 
-func (kp *KafkaProducer) SendMessage(message string) error {
+func (kp *KafkaProducerImpl) SendMessage(message string) error {
 	msg := &sarama.ProducerMessage{
 		Topic: kp.topic,
 		Value: sarama.StringEncoder(message),
@@ -49,7 +55,7 @@ func (kp *KafkaProducer) SendMessage(message string) error {
 	return nil
 }
 
-func (kp *KafkaProducer) Close() {
+func (kp *KafkaProducerImpl) Close() {
 	log := logger.GetLogger()
 	if err := kp.producer.Close(); err != nil {
 		sErr := fmt.Sprint("ошибка закрытия producer", err)

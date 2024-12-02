@@ -18,7 +18,7 @@ type Application struct {
 	Domain      string
 	DB          repository.DatabaseRepo
 	ServerConf  config.Config
-	KafkaClient *kafka.KafkaProducer
+	KafkaClient kafka.KafkaProducer
 }
 
 type Handler interface {
@@ -48,7 +48,7 @@ func (app *Application) Start(h http.Handler) error {
 	return nil
 }
 
-func New(db repository.DatabaseRepo, cfg config.Config, kafkaProducer *kafka.KafkaProducer) Handler {
+func New(db repository.DatabaseRepo, cfg config.Config, kafkaProducer kafka.KafkaProducer) Handler {
 	return &Application{
 		DB:          db,
 		ServerConf:  cfg,
