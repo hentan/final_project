@@ -46,10 +46,9 @@ func (kp *KafkaProducerImpl) SendMessage(message string) error {
 	log := logger.GetLogger()
 
 	_, _, err := kp.producer.SendMessage(msg)
-	werr := fmt.Errorf("ошибка отправки сообщения %w", err)
-	sErr := fmt.Sprint(werr)
+	werr := fmt.Sprint(fmt.Errorf("ошибка отправки сообщения %w", err))
 	if err != nil {
-		log.Error(sErr)
+		log.Error(werr)
 		return err
 	}
 	return nil

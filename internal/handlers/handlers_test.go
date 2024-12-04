@@ -18,6 +18,7 @@ import (
 	mocks "github.com/hentan/final_project/internal/mocks/repository"
 	"github.com/hentan/final_project/internal/models"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
@@ -109,11 +110,13 @@ func (s *appSuite) TestGetBookNotFound() {
 	routeCtx.URLParams.Add("id", "999")
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
 
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
+
 	rr := httptest.NewRecorder()
 	s.application.GetBook(rr, req)
 	assert.Equal(s.T(), http.StatusNotFound, rr.Code)
 
-	expected := `{"error":true, "message":"sql: no rows in result set"}`
+	expected := `{"error":true, "message":"handlers/handlers.go GetBook error can't find book!, sql: no rows in result set"}`
 	s.Require().JSONEq(expected, rr.Body.String())
 }
 
@@ -141,6 +144,7 @@ func (s *appSuite) TestInsertBookError() {
 	req := httptest.NewRequest(http.MethodPost, "/books", bytes.NewBuffer(incJSON))
 
 	rr := httptest.NewRecorder()
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
 	s.application.InsertBook(rr, req)
 	assert.Equal(s.T(), http.StatusBadRequest, rr.Code)
 
@@ -148,7 +152,7 @@ func (s *appSuite) TestInsertBookError() {
 	err := json.Unmarshal(rr.Body.Bytes(), &resp)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), true, resp.Error)
-	assert.Equal(s.T(), "json: cannot unmarshal number into Go value of type models.Book", resp.Message)
+	assert.Equal(s.T(), "handlers/handlers.go InsertBook error can't parse JSON!, json: cannot unmarshal number into Go value of type models.Book", resp.Message)
 }
 
 func (s *appSuite) TestUpdateBook_Success() {
@@ -204,11 +208,12 @@ func (s *appSuite) TestUpdateBook_Error_Not_Found() {
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
 
 	s.repo.On("OneBook", bookID).Return(nil, sql.ErrNoRows).Once()
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
 	rr := httptest.NewRecorder()
 	s.application.UpdateBook(rr, req)
 	assert.Equal(s.T(), http.StatusNotFound, rr.Code)
 
-	expected := `{"error":true, "message":"sql: no rows in result set"}`
+	expected := `{"error":true, "message":"handlers/handlers.go UpdateBook error can't find book!, sql: no rows in result set"}`
 	s.Require().JSONEq(expected, rr.Body.String())
 }
 
@@ -220,6 +225,8 @@ func (s *appSuite) TestUpdateBook_Error_Incorrect_JSON() {
 	routeCtx.URLParams.Add("id", "2")
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
 
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
+
 	rr := httptest.NewRecorder()
 	s.application.UpdateBook(rr, req)
 	assert.Equal(s.T(), http.StatusBadRequest, rr.Code)
@@ -228,7 +235,7 @@ func (s *appSuite) TestUpdateBook_Error_Incorrect_JSON() {
 	err := json.Unmarshal(rr.Body.Bytes(), &resp)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), true, resp.Error)
-	assert.Equal(s.T(), "json: cannot unmarshal number into Go value of type models.Book", resp.Message)
+	assert.Equal(s.T(), "handlers/handlers.go UpdateBook error can't parse JSON!, json: cannot unmarshal number into Go value of type models.Book", resp.Message)
 }
 
 func (s *appSuite) TestDeleteBook_Success() {
@@ -266,11 +273,12 @@ func (s *appSuite) TestDeleteBook_Error_Not_Found() {
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
 
 	s.repo.On("OneBook", bookID).Return(nil, sql.ErrNoRows).Once()
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
 	rr := httptest.NewRecorder()
 	s.application.DeleteBook(rr, req)
 	assert.Equal(s.T(), http.StatusNotFound, rr.Code)
 
-	expected := `{"error":true, "message":"sql: no rows in result set"}`
+	expected := `{"error":true, "message":"handlers/handlers.go DeleteBook error can't find book!, sql: no rows in result set"}`
 	s.Require().JSONEq(expected, rr.Body.String())
 }
 
@@ -287,6 +295,7 @@ func (s *appSuite) TestDeleteBook_Server_Error() {
 	rr := httptest.NewRecorder()
 	s.repo.On("OneBook", 2).Return(&book, nil)
 	s.repo.On("DeleteBook", 2).Return(errors.New("ошибка при удалении"))
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
 
 	s.application.DeleteBook(rr, req)
 
@@ -348,11 +357,13 @@ func (s *appSuite) TestGetAuthorNotFound() {
 	routeCtx.URLParams.Add("id", "999")
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
 
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
+
 	rr := httptest.NewRecorder()
 	s.application.GetAuthor(rr, req)
 	assert.Equal(s.T(), http.StatusNotFound, rr.Code)
 
-	expected := `{"error":true, "message":"sql: no rows in result set"}`
+	expected := `{"error":true, "message":"handlers/handlers.go GetAuthor error can't find author!, sql: no rows in result set"}`
 	s.Require().JSONEq(expected, rr.Body.String())
 }
 
@@ -379,6 +390,8 @@ func (s *appSuite) TestInsertAuthorError() {
 	incJSON, _ := json.Marshal('{')
 	req := httptest.NewRequest(http.MethodPost, "/Authors", bytes.NewBuffer(incJSON))
 
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
+
 	rr := httptest.NewRecorder()
 	s.application.InsertAuthor(rr, req)
 	assert.Equal(s.T(), http.StatusBadRequest, rr.Code)
@@ -387,7 +400,7 @@ func (s *appSuite) TestInsertAuthorError() {
 	err := json.Unmarshal(rr.Body.Bytes(), &resp)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), true, resp.Error)
-	assert.Equal(s.T(), "json: cannot unmarshal number into Go value of type models.Author", resp.Message)
+	assert.Equal(s.T(), "handlers/handlers.go InsertAuthor error can't parse JSON!, json: cannot unmarshal number into Go value of type models.Author", resp.Message)
 }
 
 func (s *appSuite) TestUpdateAuthor_Success() {
@@ -412,6 +425,7 @@ func (s *appSuite) TestUpdateAuthor_Success() {
 
 	s.repo.On("OneAuthor", 2).Return(Author, nil)
 	s.repo.On("UpdateAuthor", updatedAuthor).Return(nil)
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
 
 	s.application.UpdateAuthor(rr, req)
 
@@ -444,11 +458,12 @@ func (s *appSuite) TestUpdateAuthor_Error_Not_Found() {
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
 
 	s.repo.On("OneAuthor", AuthorID).Return(nil, sql.ErrNoRows).Once()
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
 	rr := httptest.NewRecorder()
 	s.application.UpdateAuthor(rr, req)
 	assert.Equal(s.T(), http.StatusNotFound, rr.Code)
 
-	expected := `{"error":true, "message":"sql: no rows in result set"}`
+	expected := `{"error":true, "message":"handlers/handlers.go UpdateAuthor error can't find author!, sql: no rows in result set"}`
 	s.Require().JSONEq(expected, rr.Body.String())
 }
 
@@ -460,6 +475,8 @@ func (s *appSuite) TestUpdateAuthor_Error_Incorrect_JSON() {
 	routeCtx.URLParams.Add("id", "2")
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
 
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
+
 	rr := httptest.NewRecorder()
 	s.application.UpdateAuthor(rr, req)
 	assert.Equal(s.T(), http.StatusBadRequest, rr.Code)
@@ -468,7 +485,7 @@ func (s *appSuite) TestUpdateAuthor_Error_Incorrect_JSON() {
 	err := json.Unmarshal(rr.Body.Bytes(), &resp)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), true, resp.Error)
-	assert.Equal(s.T(), "json: cannot unmarshal number into Go value of type models.Author", resp.Message)
+	assert.Equal(s.T(), "handlers/handlers.go UpdateAuthor error can't parse JSON!, json: cannot unmarshal number into Go value of type models.Author", resp.Message)
 }
 
 func (s *appSuite) TestDeleteAuthor_Success() {
@@ -506,11 +523,12 @@ func (s *appSuite) TestDeleteAuthor_Error_Not_Found() {
 	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
 
 	s.repo.On("OneAuthor", AuthorID).Return(nil, sql.ErrNoRows).Once()
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
 	rr := httptest.NewRecorder()
 	s.application.DeleteAuthor(rr, req)
 	assert.Equal(s.T(), http.StatusNotFound, rr.Code)
 
-	expected := `{"error":true, "message":"sql: no rows in result set"}`
+	expected := `{"error":true, "message":"handlers/handlers.go DeleteAuthor error can't find author!, sql: no rows in result set"}`
 	s.Require().JSONEq(expected, rr.Body.String())
 }
 
@@ -527,6 +545,7 @@ func (s *appSuite) TestDeleteAuthor_Server_Error() {
 	rr := httptest.NewRecorder()
 	s.repo.On("OneAuthor", 2).Return(&Author, nil)
 	s.repo.On("DeleteAuthor", 2).Return(errors.New("ошибка при удалении"))
+	s.kafka.On("SendMessage", mock.Anything).Return(nil)
 
 	s.application.DeleteAuthor(rr, req)
 
