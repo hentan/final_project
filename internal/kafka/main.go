@@ -13,7 +13,7 @@ type KafkaProducer interface {
 }
 
 type KafkaProducerImpl struct {
-	producer sarama.SyncProducer
+	producer sarama.AsyncProducer
 	topic    string
 }
 
@@ -24,12 +24,22 @@ func NewKafkaProducer(brokers []string, topic string) (*KafkaProducerImpl, error
 	config.Version = sarama.V2_8_0_0
 	log := logger.GetLogger()
 
-	producer, err := sarama.NewSyncProducer(brokers, config)
-
+	producer, err := sarama.NewAsyncProducer(brokers, config)
 	if err != nil {
 		log.Info("Ошибка создания Kafka Producer", "брокеры:", brokers, "конфиг:", config, "ошибка: ", err)
 		return nil, err
 	}
+
+	go func() {
+		for {
+			select {
+			case msg := <-producer.Successes():
+				log.Info("Сообщение успешно отправлено", "сообщение:", msg)
+			case err := <-producer.Errors():
+				log.Error(fmt.Sprintf("Ошибка отправки сообщения: %v", err))
+			}
+		}
+	}()
 
 	return &KafkaProducerImpl{
 		producer: producer,
@@ -38,19 +48,14 @@ func NewKafkaProducer(brokers []string, topic string) (*KafkaProducerImpl, error
 }
 
 func (kp *KafkaProducerImpl) SendMessage(message string) error {
+	log := logger.GetLogger()
 	msg := &sarama.ProducerMessage{
 		Topic: kp.topic,
 		Value: sarama.StringEncoder(message),
 	}
+	log.Info("Sending message to Kafka", "message", message)
+	kp.producer.Input() <- msg
 
-	log := logger.GetLogger()
-
-	_, _, err := kp.producer.SendMessage(msg)
-	werr := fmt.Sprint(fmt.Errorf("ошибка отправки сообщения %w", err))
-	if err != nil {
-		log.Error(werr)
-		return err
-	}
 	return nil
 }
 
