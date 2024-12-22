@@ -82,6 +82,15 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=broker:29092
     networks:
     - app-network
+    
+  redis:
+    image: redis:7.0
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

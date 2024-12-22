@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/hentan/final_project/internal/logger"
 	_ "github.com/hentan/final_project/internal/repository"
+	jsi "github.com/json-iterator/go"
 )
 
 type JSONResponce struct {
@@ -18,7 +18,7 @@ type JSONResponce struct {
 }
 
 func (app *Application) writeJSON(w http.ResponseWriter, status int, data interface{}, headers ...http.Header) error {
-	out, err := json.Marshal(data)
+	out, err := jsi.Marshal(data)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (app *Application) readJSON(w http.ResponseWriter, r *http.Request, data in
 	maxBytes := 1024 * 1024
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 
-	dec := json.NewDecoder(r.Body)
+	dec := jsi.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 	err := dec.Decode(data)
 	if err != nil {

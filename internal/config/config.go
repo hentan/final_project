@@ -15,11 +15,17 @@ const (
 	envVarDbPassword  = "DB_Password"
 	envVarDbName      = "DB_NAME"
 	envVarKafkaBroker = "KAFKA_BROKER"
+	envVarRedisAddres = "REDIS_ADDRESS"
 )
 
 type Kafka struct {
 	Brokers []string
 	Topic   string
+}
+
+type Redis struct {
+	Addr     string
+	Password string
 }
 
 type Config struct {
@@ -30,9 +36,10 @@ type Config struct {
 	DBName     string
 	AppPort    string
 	Kafka      Kafka
+	Redis      Redis
 }
 
-func NewConfigDB(path string) Config {
+func NewConfig(path string) Config {
 	newLogger := logger.GetLogger()
 	err := godotenv.Load(path)
 	if err != nil {
@@ -53,6 +60,10 @@ func NewConfigDB(path string) Config {
 		Kafka: Kafka{
 			Brokers: []string{kafkaBroker},
 			Topic:   "errors_from_handlers",
+		},
+		Redis: Redis{
+			Addr:     getEnv(envVarRedisAddres, "localhost:6379"),
+			Password: "",
 		},
 	}
 }

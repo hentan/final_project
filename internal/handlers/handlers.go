@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/hentan/final_project/internal/kafka"
 	"github.com/hentan/final_project/internal/logger"
 	"github.com/hentan/final_project/internal/models"
+	redispackage "github.com/hentan/final_project/internal/redis"
 	"github.com/hentan/final_project/internal/repository"
 )
 
@@ -19,6 +22,7 @@ type Application struct {
 	DB          repository.DatabaseRepo
 	ServerConf  config.Config
 	KafkaClient kafka.KafkaProducer
+	RedisClient redispackage.RedisClient
 }
 
 type Handler interface {
@@ -48,11 +52,12 @@ func (app *Application) Start(h http.Handler) error {
 	return nil
 }
 
-func New(db repository.DatabaseRepo, cfg config.Config, kafkaProducer kafka.KafkaProducer) Handler {
+func New(db repository.DatabaseRepo, cfg config.Config, kafkaProducer kafka.KafkaProducer, redisClient redispackage.RedisClient) Handler {
 	return &Application{
 		DB:          db,
 		ServerConf:  cfg,
 		KafkaClient: kafkaProducer,
+		RedisClient: redisClient,
 	}
 }
 
@@ -83,6 +88,7 @@ func (app *Application) AllBooks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) GetBook(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 	id := chi.URLParam(r, "id")
 	bookID, err := strconv.Atoi(id)
 	if err != nil {
@@ -91,12 +97,22 @@ func (app *Application) GetBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	book, err := app.DB.OneBook(bookID)
-
+	book, err := app.RedisClient.GetBookFromCache(ctx, bookID)
 	if err != nil {
-		wrapError := fmt.Errorf("handlers/handlers.go GetBook error can't find book!, %w", err)
-		app.errorJSON(w, wrapError, 404)
+		wrapError := fmt.Errorf("handlers/handlers.go redispackage error, %w", err)
+		app.errorJSON(w, wrapError)
 		return
+	}
+
+	if book == nil {
+		book, err = app.DB.OneBook(bookID)
+		if err != nil {
+			wrapError := fmt.Errorf("handlers/handlers.go GetBook error can't find book!, %w", err)
+			app.errorJSON(w, wrapError, 404)
+			return
+		}
+
+		app.RedisClient.SetUserToCache(ctx, bookID, book, time.Duration(60*time.Second))
 	}
 
 	_ = app.writeJSON(w, http.StatusOK, book)
