@@ -91,6 +91,11 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    command: [
+      "redis-server",
+      "--maxmemory", "100mb",
+      "--maxmemory-policy", "volatile-lru" 
+    ]
 
 volumes:
   postgres_data:
