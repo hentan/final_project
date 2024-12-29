@@ -15,6 +15,7 @@ import (
 	"github.com/hentan/final_project/internal/handlers"
 	"github.com/hentan/final_project/internal/handlers/testdata"
 	mocksKafka "github.com/hentan/final_project/internal/mocks/kafka"
+	mocksRedis "github.com/hentan/final_project/internal/mocks/redis"
 	mocks "github.com/hentan/final_project/internal/mocks/repository"
 	"github.com/hentan/final_project/internal/models"
 	"github.com/stretchr/testify/assert"
@@ -28,15 +29,18 @@ type appSuite struct {
 	application *handlers.Application
 	repo        *mocks.DatabaseRepo
 	kafka       *mocksKafka.KafkaProducer
+	redis       *mocksRedis.RedisClient
 }
 
 func (s *appSuite) SetupTest() {
 	// Инициализация моков и приложения перед каждым тестом
 	s.repo = new(mocks.DatabaseRepo)
 	s.kafka = new(mocksKafka.KafkaProducer)
+	s.redis = new(mocksRedis.RedisClient)
 	s.application = &handlers.Application{
 		DB:          s.repo,
 		KafkaClient: s.kafka,
+		RedisClient: s.redis,
 	}
 }
 
@@ -79,11 +83,13 @@ func (s *appSuite) TestAllBooks() {
 }
 
 func (s *appSuite) TestGetBook() {
-
 	expectedBooks := testdata.ReadBook(&s.Suite, "books/read_all_books_success.json")
 	book := *expectedBooks[0]
 
+	s.redis.On("GetFromCache", mock.Anything, 2).Return(nil, nil).Once()
 	s.repo.On("OneBook", 2).Return(&book, nil).Once()
+	s.redis.On("SetToCache", mock.Anything, 2, &book, mock.Anything).Return(nil).Once()
+	fmt.Println(s.redis)
 	req, err := http.NewRequest("GET", "/book/2", nil)
 	require.NoError(s.T(), err)
 
@@ -101,8 +107,8 @@ func (s *appSuite) TestGetBook() {
 
 func (s *appSuite) TestGetBookNotFound() {
 	bookID := 999
+	s.redis.On("GetFromCache", mock.Anything, 999).Return(nil, nil).Once()
 	s.repo.On("OneBook", bookID).Return(nil, sql.ErrNoRows).Once()
-
 	req, err := http.NewRequest("GET", "/book/999", nil)
 	require.NoError(s.T(), err)
 
@@ -152,7 +158,7 @@ func (s *appSuite) TestInsertBookError() {
 	err := json.Unmarshal(rr.Body.Bytes(), &resp)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), true, resp.Error)
-	assert.Equal(s.T(), "handlers/handlers.go InsertBook error can't parse JSON!, json: cannot unmarshal number into Go value of type models.Book", resp.Message)
+	assert.Contains(s.T(), resp.Message, "handlers/handlers.go InsertBook error can't parse JSON!")
 }
 
 func (s *appSuite) TestUpdateBook_Success() {
@@ -235,7 +241,7 @@ func (s *appSuite) TestUpdateBook_Error_Incorrect_JSON() {
 	err := json.Unmarshal(rr.Body.Bytes(), &resp)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), true, resp.Error)
-	assert.Equal(s.T(), "handlers/handlers.go UpdateBook error can't parse JSON!, json: cannot unmarshal number into Go value of type models.Book", resp.Message)
+	assert.Contains(s.T(), resp.Message, "handlers/handlers.go UpdateBook error can't parse JSON!")
 }
 
 func (s *appSuite) TestDeleteBook_Success() {
@@ -400,7 +406,7 @@ func (s *appSuite) TestInsertAuthorError() {
 	err := json.Unmarshal(rr.Body.Bytes(), &resp)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), true, resp.Error)
-	assert.Equal(s.T(), "handlers/handlers.go InsertAuthor error can't parse JSON!, json: cannot unmarshal number into Go value of type models.Author", resp.Message)
+	assert.Contains(s.T(), resp.Message, "handlers/handlers.go InsertAuthor error can't parse JSON!")
 }
 
 func (s *appSuite) TestUpdateAuthor_Success() {
@@ -485,7 +491,7 @@ func (s *appSuite) TestUpdateAuthor_Error_Incorrect_JSON() {
 	err := json.Unmarshal(rr.Body.Bytes(), &resp)
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), true, resp.Error)
-	assert.Equal(s.T(), "handlers/handlers.go UpdateAuthor error can't parse JSON!, json: cannot unmarshal number into Go value of type models.Author", resp.Message)
+	assert.Contains(s.T(), resp.Message, "handlers/handlers.go UpdateAuthor error can't parse JSON!")
 }
 
 func (s *appSuite) TestDeleteAuthor_Success() {

@@ -97,9 +97,9 @@ func (app *Application) GetBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	book, err := app.RedisClient.GetBookFromCache(ctx, bookID)
+	book, err := app.RedisClient.GetFromCache(ctx, bookID)
 	if err != nil {
-		wrapError := fmt.Errorf("handlers/handlers.go redispackage error, %w", err)
+		wrapError := fmt.Errorf("handlers/handlers.go redispackage eerror get key or value, %w", err)
 		app.errorJSON(w, wrapError)
 		return
 	}
@@ -112,7 +112,12 @@ func (app *Application) GetBook(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		app.RedisClient.SetUserToCache(ctx, bookID, book, time.Duration(60*time.Second))
+		err = app.RedisClient.SetToCache(ctx, bookID, book, time.Duration(60*time.Second))
+		if err != nil {
+			wrapError := fmt.Errorf("handlers/handlers.go redispackage error set key or value, %w", err)
+			app.errorJSON(w, wrapError)
+			return
+		}
 	}
 
 	_ = app.writeJSON(w, http.StatusOK, book)

@@ -17,8 +17,8 @@ import (
 )
 
 type RedisClient interface {
-	SetUserToCache(ctx context.Context, bookID int, book *models.Book, ttl time.Duration) error
-	GetBookFromCache(ctx context.Context, bookID int) (*models.Book, error)
+	SetToCache(ctx context.Context, bookID int, book *models.Book, ttl time.Duration) error
+	GetFromCache(ctx context.Context, bookID int) (*models.Book, error)
 }
 
 type RedisCache struct {
@@ -33,7 +33,7 @@ func NewRedisClient(cfg config.Config) *RedisCache {
 	return &RedisCache{client: redisClient}
 }
 
-func (r *RedisCache) SetUserToCache(ctx context.Context, bookID int, book *models.Book, ttl time.Duration) error {
+func (r *RedisCache) SetToCache(ctx context.Context, bookID int, book *models.Book, ttl time.Duration) error {
 	log := logger.GetLogger()
 	key := fmt.Sprintf("book:%d", bookID)
 	data, err := jsi.Marshal(book)
@@ -44,7 +44,7 @@ func (r *RedisCache) SetUserToCache(ctx context.Context, bookID int, book *model
 	return r.client.Set(ctx, key, data, ttl).Err()
 }
 
-func (r *RedisCache) GetBookFromCache(ctx context.Context, bookID int) (*models.Book, error) {
+func (r *RedisCache) GetFromCache(ctx context.Context, bookID int) (*models.Book, error) {
 	log := logger.GetLogger()
 	key := fmt.Sprintf("book:%d", bookID)
 	cachedBook, err := r.client.Get(ctx, key).Result()
