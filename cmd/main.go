@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	_ "github.com/hentan/final_project/docs"
 	"github.com/hentan/final_project/internal/config"
 	"github.com/hentan/final_project/internal/handlers"
 	"github.com/hentan/final_project/internal/kafka"
@@ -10,6 +11,11 @@ import (
 	redispackage "github.com/hentan/final_project/internal/redis"
 	"github.com/hentan/final_project/internal/repository"
 )
+
+//	@title			Simple Books API
+//	@version		1.0
+//	@description	This is a simple application for viewing authors and books
+//  @host localhost:8080
 
 func main() {
 	//create connection string and parse it

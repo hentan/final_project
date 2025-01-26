@@ -5,6 +5,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	_ "github.com/hentan/final_project/docs"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func Routes(h Handler) http.Handler {
@@ -23,5 +25,8 @@ func Routes(h Handler) http.Handler {
 	mux.Post("/authors", h.InsertAuthor)
 	mux.Delete("/authors/{id}", h.DeleteAuthor)
 	mux.Put("/books/{id_book}/authors/{id_author}", h.UpdateAuthorAndBook)
+	mux.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
+	))
 	return mux
 }

@@ -1,0 +1,153 @@
+definitions:
+  handlers.JSONResponce:
+    properties:
+      data: {}
+      error:
+        type: boolean
+      message:
+        type: string
+    type: object
+  models.Book:
+    properties:
+      author:
+        type: string
+      author_id:
+        type: integer
+      id:
+        type: integer
+      isbn:
+        type: string
+      title:
+        type: string
+      year:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a simple application for viewing authors and books
+  title: Simple Books API
+  version: "1.0"
+paths:
+  /books:
+    get:
+      consumes:
+      - application/json
+      description: Получить список всех книг из базы данных
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+      summary: Получить все книги
+      tags:
+      - books
+    post:
+      consumes:
+      - application/json
+      description: Добавить новую книгу в базу данных
+      parameters:
+      - description: Данные книги
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.Book'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+      summary: Добавить новую книгу
+      tags:
+      - books
+  /books/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Получить книгу по её ID из базы данных или кэша
+      parameters:
+      - description: ID книги
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+      summary: Получить книгу по ID
+      tags:
+      - books
+    put:
+      consumes:
+      - application/json
+      description: Обновить книгу в базе данных
+      parameters:
+      - description: ID книги
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные книги
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.Book'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+      summary: обновить книгу
+      tags:
+      - books
+swagger: "2.0"

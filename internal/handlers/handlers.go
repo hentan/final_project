@@ -75,6 +75,15 @@ func (app *Application) Home(w http.ResponseWriter, r *http.Request) {
 	_ = app.writeJSON(w, http.StatusOK, payload)
 }
 
+// AllBooks возвращает список всех книг.
+// @Summary Получить все книги
+// @Description Получить список всех книг из базы данных
+// @Tags books
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} models.Book
+// @Failure 500 {object} JSONResponce
+// @Router /books [get]
 func (app *Application) AllBooks(w http.ResponseWriter, r *http.Request) {
 	books, err := app.DB.AllBooks()
 	if err != nil {
@@ -87,6 +96,18 @@ func (app *Application) AllBooks(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// GetBook возвращает книгу по ID.
+// @Summary Получить книгу по ID
+// @Description Получить книгу по её ID из базы данных или кэша
+// @Tags books
+// @Accept  json
+// @Produce  json
+// @Param id path int true "ID книги"
+// @Success 200 {object} models.Book
+// @Failure 400 {object} JSONResponce
+// @Failure 404 {object} JSONResponce
+// @Failure 500 {object} JSONResponce
+// @Router /books/{id} [get]
 func (app *Application) GetBook(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	id := chi.URLParam(r, "id")
@@ -123,6 +144,17 @@ func (app *Application) GetBook(w http.ResponseWriter, r *http.Request) {
 	_ = app.writeJSON(w, http.StatusOK, book)
 }
 
+// InsertBook добавляет новую книгу.
+// @Summary Добавить новую книгу
+// @Description Добавить новую книгу в базу данных
+// @Tags books
+// @Accept  json
+// @Produce  json
+// @Param book body models.Book true "Данные книги"
+// @Success 201 {object} JSONResponce
+// @Failure 400 {object} JSONResponce
+// @Failure 500 {object} JSONResponce
+// @Router /books [post]
 func (app *Application) InsertBook(w http.ResponseWriter, r *http.Request) {
 	var bookWithID models.Book
 
@@ -149,6 +181,19 @@ func (app *Application) InsertBook(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// UpdateBook обновляет книгу по id.
+// @Summary обновить книгу
+// @Description Обновить книгу в базе данных
+// @Tags books
+// @Accept  json
+// @Produce  json
+// @Param id path int true "ID книги"
+// @Param book body models.Book true "Данные книги"
+// @Success 200 {object} JSONResponce
+// @Failure 400 {object} JSONResponce
+// @Failure 404 {object} JSONResponce
+// @Failure 500 {object} JSONResponce
+// @Router /books/{id} [put]
 func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
