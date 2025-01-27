@@ -7,6 +7,26 @@ definitions:
       message:
         type: string
     type: object
+  models.Author:
+    properties:
+      biography:
+        type: string
+      birthday:
+        type: string
+      id:
+        type: integer
+      name_author:
+        type: string
+      surname_author:
+        type: string
+    type: object
+  models.AuthorAndBook:
+    properties:
+      author:
+        $ref: '#/definitions/models.Author'
+      book:
+        $ref: '#/definitions/models.Book'
+    type: object
   models.Book:
     properties:
       author:
@@ -29,6 +49,130 @@ info:
   title: Simple Books API
   version: "1.0"
 paths:
+  /authors:
+    get:
+      consumes:
+      - application/json
+      description: Получить список всех авторов из базы данных
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Author'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+      summary: Получить всех авторов
+      tags:
+      - authors
+  /authors/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удалить автора по его ID из базы данных или кэша
+      parameters:
+      - description: ID автора
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Author'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+      summary: удалить автора по ID
+      tags:
+      - authors
+    get:
+      consumes:
+      - application/json
+      description: Получить автора по его ID из базы данных или кэша
+      parameters:
+      - description: ID автора
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Author'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+      summary: Получить автора по ID
+      tags:
+      - authors
+    put:
+      consumes:
+      - application/json
+      description: Обновить автора в базе данных и кэше
+      parameters:
+      - description: ID автора
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные по автору для обновления
+        in: body
+        name: author
+        required: true
+        schema:
+          $ref: '#/definitions/models.Author'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+      summary: обновить автора
+      tags:
+      - authors
   /books:
     get:
       consumes:
@@ -79,7 +223,83 @@ paths:
       summary: Добавить новую книгу
       tags:
       - books
+  /books/{bookId}/authors/{authorId}:
+    put:
+      consumes:
+      - application/json
+      description: Обновить автора и книгу в базе данных и кэше
+      parameters:
+      - description: ID книги
+        in: path
+        name: id_book
+        required: true
+        type: integer
+      - description: ID автора
+        in: path
+        name: id_author
+        required: true
+        type: integer
+      - description: Данные по автору и книге для обновления
+        in: body
+        name: author
+        required: true
+        schema:
+          $ref: '#/definitions/models.AuthorAndBook'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+      summary: обновить автора и книгу
+      tags:
+      - authors
   /books/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удалить книгу по её ID из базы данных или кэша
+      parameters:
+      - description: ID книги
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.JSONResponce'
+      summary: удалить книгу по ID
+      tags:
+      - books
     get:
       consumes:
       - application/json
@@ -115,7 +335,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Обновить книгу в базе данных
+      description: Обновить книгу в базе данных и кэше
       parameters:
       - description: ID книги
         in: path

@@ -185,7 +185,7 @@ func (app *Application) InsertBook(w http.ResponseWriter, r *http.Request) {
 
 // UpdateBook обновляет книгу по id.
 // @Summary обновить книгу
-// @Description Обновить книгу в базе данных
+// @Description Обновить книгу в базе данных и кэше
 // @Tags books
 // @Accept  json
 // @Produce  json
@@ -211,7 +211,7 @@ func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	err = app.readJSON(w, r, &payload)
 	if err != nil {
 		wrapError := fmt.Errorf("handlers/handlers.go UpdateBook error can't parse JSON!, %w", err)
-		app.errorJSON(w, wrapError)
+		app.errorJSON(w, wrapError, 400)
 		return
 	}
 
@@ -237,7 +237,7 @@ func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	err = app.RedisClient.SetToCache(ctx, ID, book, time.Duration(60*time.Second))
 	if err != nil {
 		wrapError := fmt.Errorf("handlers/handlers.go redispackage error set key or value, %w", err)
-		app.errorJSON(w, wrapError)
+		app.errorJSON(w, wrapError, 500)
 		return
 	}
 
@@ -250,7 +250,7 @@ func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// DeleteBook возвращает книгу по ID.
+// DeleteBook удаляет книгу по ID.
 // @Summary удалить книгу по ID
 // @Description Удалить книгу по её ID из базы данных или кэша
 // @Tags books
@@ -261,7 +261,7 @@ func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} JSONResponce
 // @Failure 404 {object} JSONResponce
 // @Failure 500 {object} JSONResponce
-// @Router /books/{id} [get]
+// @Router /books/{id} [delete]
 func (app *Application) DeleteBook(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	id := chi.URLParam(r, "id")
@@ -303,7 +303,15 @@ func (app *Application) DeleteBook(w http.ResponseWriter, r *http.Request) {
 }
 
 // с этой строки и ниже действия с авторами
-
+// AllAuthors возвращает список всех авторов.
+// @Summary Получить всех авторов
+// @Description Получить список всех авторов из базы данных
+// @Tags authors
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} models.Author
+// @Failure 500 {object} JSONResponce
+// @Router /authors [get]
 func (app *Application) AllAuthors(w http.ResponseWriter, r *http.Request) {
 	books, err := app.DB.AllAuthors()
 	if err != nil {
@@ -316,6 +324,18 @@ func (app *Application) AllAuthors(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// GetAuthor возвращает автора по ID.
+// @Summary Получить автора по ID
+// @Description Получить автора по его ID из базы данных или кэша
+// @Tags authors
+// @Accept  json
+// @Produce  json
+// @Param id path int true "ID автора"
+// @Success 200 {object} models.Author
+// @Failure 400 {object} JSONResponce
+// @Failure 404 {object} JSONResponce
+// @Failure 500 {object} JSONResponce
+// @Router /authors/{id} [get]
 func (app *Application) GetAuthor(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	id := chi.URLParam(r, "id")
@@ -371,6 +391,19 @@ func (app *Application) InsertAuthor(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// UpdateBook обновляет автора по id.
+// @Summary обновить автора
+// @Description Обновить автора в базе данных и кэше
+// @Tags authors
+// @Accept  json
+// @Produce  json
+// @Param id path int true "ID автора"
+// @Param author body models.Author true "Данные по автору для обновления"
+// @Success 200 {object} JSONResponce
+// @Failure 400 {object} JSONResponce
+// @Failure 404 {object} JSONResponce
+// @Failure 500 {object} JSONResponce
+// @Router /authors/{id} [put]
 func (app *Application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	id := chi.URLParam(r, "id")
@@ -425,6 +458,18 @@ func (app *Application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// DeleteBook удаляет автора по ID.
+// @Summary удалить автора по ID
+// @Description Удалить автора по его ID из базы данных или кэша
+// @Tags authors
+// @Accept  json
+// @Produce  json
+// @Param id path int true "ID автора"
+// @Success 200 {object} models.Author
+// @Failure 400 {object} JSONResponce
+// @Failure 404 {object} JSONResponce
+// @Failure 500 {object} JSONResponce
+// @Router /authors/{id} [delete]
 func (app *Application) DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
@@ -457,7 +502,22 @@ func (app *Application) DeleteAuthor(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// UpdateAuthorAndBook обновляет автора и книгу по id в одной транзакции.
+// @Summary обновить автора и книгу
+// @Description Обновить автора и книгу в базе данных и кэше
+// @Tags authors
+// @Accept  json
+// @Produce  json
+// @Param id_book path int true "ID книги"
+// @Param id_author path int true "ID автора"
+// @Param author body models.AuthorAndBook true "Данные по автору и книге для обновления"
+// @Success 200 {object} JSONResponce
+// @Failure 400 {object} JSONResponce
+// @Failure 404 {object} JSONResponce
+// @Failure 500 {object} JSONResponce
+// @Router /books/{bookId}/authors/{authorId} [put]
 func (app *Application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 	id_book := chi.URLParam(r, "id_book")
 	ID_book, err := strconv.Atoi(id_book)
 	if err != nil {
@@ -510,6 +570,20 @@ func (app *Application) UpdateAuthorAndBook(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		wrapError := fmt.Errorf("handlers/handlers.go UpdateAuthorAndBook error problems with update author or book!, %w", err)
 		app.errorJSON(w, wrapError, 500)
+		return
+	}
+
+	err = app.RedisClient.SetToCache(ctx, ID_book, book, time.Duration(60*time.Second))
+	if err != nil {
+		wrapError := fmt.Errorf("handlers/handlers.go redispackage error set key or value, %w", err)
+		app.errorJSON(w, wrapError)
+		return
+	}
+
+	err = app.RedisClient.SetToCache(ctx, ID_author, author, time.Duration(60*time.Second))
+	if err != nil {
+		wrapError := fmt.Errorf("handlers/handlers.go redispackage error set key or value, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
