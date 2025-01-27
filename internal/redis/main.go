@@ -17,8 +17,9 @@ import (
 )
 
 type RedisClient interface {
-	SetToCache(ctx context.Context, bookID int, book *models.Book, ttl time.Duration) error
-	GetFromCache(ctx context.Context, bookID int) (*models.Book, error)
+	SetToCache(ctx context.Context, ID int, bookOrAuthor models.Serializable, ttl time.Duration) error
+	GetFromCache(ctx context.Context, ID int, result models.Deserializable) error
+	DeleteFromCaсhe(ctx context.Context, bookID int) error
 }
 
 type RedisCache struct {
@@ -33,36 +34,45 @@ func NewRedisClient(cfg config.Config) *RedisCache {
 	return &RedisCache{client: redisClient}
 }
 
-func (r *RedisCache) SetToCache(ctx context.Context, bookID int, book *models.Book, ttl time.Duration) error {
+func (r *RedisCache) SetToCache(ctx context.Context, ID int, bookOrAuthor models.Serializable, ttl time.Duration) error {
 	log := logger.GetLogger()
-	key := fmt.Sprintf("book:%d", bookID)
-	data, err := jsi.Marshal(book)
+	key := fmt.Sprintf("book:%d", ID)
+	data, err := bookOrAuthor.Serialize()
 	if err != nil {
-		log.Error("не получилось распарсить book при парсинге redis: ", slog.String("err", err.Error()))
+		log.Error("Ошибка при сериализации данных в redis: ", slog.String("err", err.Error()))
 		return err
 	}
 	return r.client.Set(ctx, key, data, ttl).Err()
 }
 
-func (r *RedisCache) GetFromCache(ctx context.Context, bookID int) (*models.Book, error) {
+func (r *RedisCache) GetFromCache(ctx context.Context, ID int, bookOrAuthor models.Deserializable) error {
 	log := logger.GetLogger()
-	key := fmt.Sprintf("book:%d", bookID)
+	key := fmt.Sprintf("book:%d", ID)
 	cachedBook, err := r.client.Get(ctx, key).Result()
 	if err != nil {
+		//ключа нет в кэше
 		if errors.Is(err, redis.Nil) {
-			log.Info("Ключ не найден в кэше Redis", slog.String("key", key))
-			return nil, nil
+			return nil
 		}
-		return nil, err
+		return err
 	}
-	var book models.Book
-	err = jsi.Unmarshal([]byte(cachedBook), &book)
+	err = jsi.Unmarshal([]byte(cachedBook), &bookOrAuthor)
 	if err != nil {
 		log.Error("не получается распарсить данные при получении кэша Redis", slog.String("err", err.Error()))
-		return nil, err
+		return err
 	}
-	return &book, nil
+	return nil
+}
 
+func (r *RedisCache) DeleteFromCaсhe(ctx context.Context, bookID int) error {
+	log := logger.GetLogger()
+	key := fmt.Sprintf("book:%d", bookID)
+	err := r.client.Del(ctx, key).Err()
+	if err != nil {
+		log.Error("не получается удалить ключ Redis", slog.String("err", err.Error()))
+		return err
+	}
+	return nil
 }
 
 func (r *RedisCache) getCacheHitRatio(ctx context.Context) (float64, error) {

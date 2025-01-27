@@ -118,7 +118,9 @@ func (app *Application) GetBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	book, err := app.RedisClient.GetFromCache(ctx, bookID)
+	var book *models.Book
+
+	err = app.RedisClient.GetFromCache(ctx, bookID, book)
 	if err != nil {
 		wrapError := fmt.Errorf("handlers/handlers.go redispackage eerror get key or value, %w", err)
 		app.errorJSON(w, wrapError)
@@ -195,6 +197,7 @@ func (app *Application) InsertBook(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} JSONResponce
 // @Router /books/{id} [put]
 func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
@@ -231,6 +234,13 @@ func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = app.RedisClient.SetToCache(ctx, ID, book, time.Duration(60*time.Second))
+	if err != nil {
+		wrapError := fmt.Errorf("handlers/handlers.go redispackage error set key or value, %w", err)
+		app.errorJSON(w, wrapError)
+		return
+	}
+
 	resp := JSONResponce{
 		Error:   false,
 		Message: fmt.Sprintf("Книга c id %d успешно обновлена", ID),
@@ -240,12 +250,32 @@ func (app *Application) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// DeleteBook возвращает книгу по ID.
+// @Summary удалить книгу по ID
+// @Description Удалить книгу по её ID из базы данных или кэша
+// @Tags books
+// @Accept  json
+// @Produce  json
+// @Param id path int true "ID книги"
+// @Success 200 {object} models.Book
+// @Failure 400 {object} JSONResponce
+// @Failure 404 {object} JSONResponce
+// @Failure 500 {object} JSONResponce
+// @Router /books/{id} [get]
 func (app *Application) DeleteBook(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
 		wrapError := fmt.Errorf("handlers/handlers.go DeleteBook ID must be INT!, %w", err)
 		app.errorJSON(w, wrapError, 400)
+		return
+	}
+
+	err = app.RedisClient.DeleteFromCaсhe(ctx, ID)
+	if err != nil {
+		wrapError := fmt.Errorf("handlers/handlers.go DeleteBook error problems with delete from redis!, %w", err)
+		app.errorJSON(w, wrapError, 500)
 		return
 	}
 
@@ -287,6 +317,7 @@ func (app *Application) AllAuthors(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) GetAuthor(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 	id := chi.URLParam(r, "id")
 	authorID, err := strconv.Atoi(id)
 	if err != nil {
@@ -295,7 +326,16 @@ func (app *Application) GetAuthor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	author, err := app.DB.OneAuthor(authorID)
+	var author *models.Author
+
+	err = app.RedisClient.GetFromCache(ctx, authorID, author)
+	if err != nil {
+		wrapError := fmt.Errorf("handlers/handlers.go redispackage eerror get key or value, %w", err)
+		app.errorJSON(w, wrapError)
+		return
+	}
+
+	author, err = app.DB.OneAuthor(authorID)
 	if err != nil {
 		wrapError := fmt.Errorf("handlers/handlers.go GetAuthor error can't find author!, %w", err)
 		app.errorJSON(w, wrapError, 404)
@@ -332,6 +372,7 @@ func (app *Application) InsertAuthor(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
 	id := chi.URLParam(r, "id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
@@ -365,6 +406,13 @@ func (app *Application) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		wrapError := fmt.Errorf("handlers/handlers.go UpdateAuthor error problems with update author!, %w", err)
 		app.errorJSON(w, wrapError, 500)
+		return
+	}
+
+	err = app.RedisClient.SetToCache(ctx, ID, author, time.Duration(60*time.Second))
+	if err != nil {
+		wrapError := fmt.Errorf("handlers/handlers.go redispackage error set key or value, %w", err)
+		app.errorJSON(w, wrapError)
 		return
 	}
 
