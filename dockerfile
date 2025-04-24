@@ -1,5 +1,5 @@
 # Используем конкретную версию официального изображения Go в качестве базового
-FROM golang:1.22
+FROM golang:1.23.6
 
 # Устанавливаем рабочую директорию внутри контейнера
 WORKDIR /app
@@ -21,6 +21,9 @@ COPY ./docs ./docs
 
 # Устанавливаем утилиту для миграций
 RUN go install -tags "postgres" github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+#добавим netcat
+RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
 
 # Сборка Go-приложения
 RUN go build -o main ./cmd

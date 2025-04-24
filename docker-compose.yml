@@ -15,7 +15,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    mem_limit: 8g
     restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -29,8 +28,11 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+      - "40000:40000"
+      - "50051:50051"
     depends_on:
       - db
+      - broker
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/final_project?sslmode=disable
     networks:

@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	_ "github.com/hentan/final_project/docs"
+	grpcServ "github.com/hentan/final_project/internal/adapter/driving/grpc"
 	"github.com/hentan/final_project/internal/config"
 	"github.com/hentan/final_project/internal/handlers"
 	"github.com/hentan/final_project/internal/kafka"
@@ -18,7 +20,7 @@ import (
 //  @host localhost:8080
 
 func main() {
-	//create connection string and parse it
+	ctx, _ := context.WithCancel(context.Background())
 	envFilePath := "configs/api.env"
 	cfg := config.NewConfig(envFilePath)
 	configLogger, _ := logger.NewConfigWithFormat("json")
@@ -30,9 +32,13 @@ func main() {
 	redisClient := redispackage.NewRedisClient(cfg)
 	kafkaProducer, err := kafka.NewKafkaProducer(cfg.Kafka.Brokers, cfg.Kafka.Topic)
 	if err != nil {
-		newLogger.Error("не удалось создать Kafka producer")
+		newLogger.Error("не удалось создать Kafka producer", "err", err)
 		return
 	}
+	newLogger.Info("пытаемся стартовать GRPC")
+	gRPCServer := grpcServ.NewGRPCServer(ctx, "50051")
+	gRPCServer.Start()
+	newLogger.Info("старт успешно прошел")
 
 	repo := repository.New(cfg)
 	if repo == nil {
