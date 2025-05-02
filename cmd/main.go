@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/hentan/final_project/internal/provider"
 	"log"
 
 	_ "github.com/hentan/final_project/docs"
@@ -35,16 +36,15 @@ func main() {
 		newLogger.Error("не удалось создать Kafka producer", "err", err)
 		return
 	}
-	newLogger.Info("пытаемся стартовать GRPC")
-	gRPCServer := grpcServ.NewGRPCServer(ctx, "50051")
-	gRPCServer.Start()
-	newLogger.Info("старт успешно прошел")
-
 	repo := repository.New(cfg)
 	if repo == nil {
 		newLogger.Error("не удалось подключиться к базе данных!")
 		return
 	}
+	useCaseProvider := provider.NewUseCaseProvider(repo)
+	newLogger.Info("пытаемся стартовать GRPC")
+	gRPCServer := grpcServ.NewGRPCServer(ctx, "50051", *useCaseProvider)
+	gRPCServer.Start()
 	app := handlers.New(repo, cfg, kafkaProducer, redisClient)
 
 	// start database

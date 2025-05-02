@@ -4,10 +4,10 @@ import (
 	"context"
 	v1 "github.com/hentan/final_project/internal/adapter/driving/grpc/v1"
 	"github.com/hentan/final_project/internal/logger"
+	"github.com/hentan/final_project/internal/provider"
 	"github.com/hentan/internal_api_books/gen/go/books"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"io"
 	"log"
 	"net"
 )
@@ -19,9 +19,9 @@ type Server struct {
 	bookServer books.BookServiceServer
 }
 
-func NewGRPCServer(ctx context.Context, port string) *Server {
+func NewGRPCServer(ctx context.Context, port string, useCaseProvider provider.UseCaseProvider) *Server {
 	grpcServer := grpc.NewServer()
-	service := v1.NewBookstoreServer()
+	service := v1.NewBookstoreServer(useCaseProvider.BookUseCase)
 	reflection.Register(grpcServer)
 
 	return &Server{
@@ -43,11 +43,8 @@ func (s *Server) Start() {
 	books.RegisterBookServiceServer(s.server, s.bookServer)
 
 	newLogger.Info("Listening on port 50051")
-	if err := s.server.Serve(lis); err != io.EOF {
-		log.Fatalf("failed to serve: %v", err)
-	}
-}
-
-type BookServiceServer struct {
-	books.UnimplementedBookServiceServer
+	go func() {
+		s.errors <- s.server.Serve(lis)
+		close(s.errors)
+	}()
 }
